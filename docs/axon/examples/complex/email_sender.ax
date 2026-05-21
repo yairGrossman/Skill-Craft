@@ -1,0 +1,8 @@
+class EmailSender {
+
+  @public
+  skill send(recipient, subject, body) {
+    - compose an email to `recipient` with subject `subject` and the given `body`
+    - send the email
+  }
+}

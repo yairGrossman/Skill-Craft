@@ -1,0 +1,8 @@
+class FileExporter {
+
+  @public
+  skill export_to_pdf(content, filename) {
+    - render `content` as a well-formatted PDF
+    - save the PDF as `filename`
+  }
+}

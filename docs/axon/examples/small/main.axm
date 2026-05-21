@@ -1,0 +1,5 @@
+@main
+skill main {
+  - call Greeter.greet(name: "Yair")
+  - call Greeter.recall
+}
