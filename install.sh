@@ -9,18 +9,7 @@ RAW="https://raw.githubusercontent.com/yairGrossman/Axon/main"
 
 PROJECT_DIR="$(pwd)"
 
-echo ""
-echo "==> Axon installer"
-echo "    Project root : $PROJECT_DIR"
-echo "    Skill path   : $PROJECT_DIR/.claude/skills/axon-compile"
-echo "    Example path : $PROJECT_DIR/axon/"
-echo ""
-read -rp "Install here? [Y/n] " confirm
-if [[ "$confirm" =~ ^[Nn] ]]; then
-    echo "Aborted. cd into your project folder first, then re-run."
-    exit 0
-fi
-echo ""
+echo "==> Installing Axon developer tools"
 
 # ── 1. axon-compile skill ────────────────────────────────────────────────────
 SKILL_DIR="$PROJECT_DIR/.claude/skills/axon-compile"

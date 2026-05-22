@@ -8,18 +8,7 @@ $RAW  = "https://raw.githubusercontent.com/yairGrossman/Axon/main"
 
 $projectDir = (Get-Location).Path
 
-Write-Host ""
-Write-Host "==> Axon installer" -ForegroundColor Cyan
-Write-Host "    Project root : $projectDir"
-Write-Host "    Skill path   : $projectDir\.claude\skills\axon-compile"
-Write-Host "    Example path : $projectDir\axon\"
-Write-Host ""
-$confirm = Read-Host "Install here? [Y/n]"
-if ($confirm -match '^[Nn]') {
-    Write-Host "Aborted. cd into your project folder first, then re-run." -ForegroundColor Yellow
-    exit
-}
-Write-Host ""
+Write-Host "==> Installing Axon developer tools" -ForegroundColor Cyan
 
 # ── 1. axon-compile skill ────────────────────────────────────────────────────
 $skillDir = Join-Path $projectDir ".claude\skills\axon-compile"
