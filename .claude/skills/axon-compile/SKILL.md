@@ -403,15 +403,42 @@ Apply every semantic rule (SR-1 through SR-13). Detect every error condition (E1
 
 If any errors exist, emit them all using the format above, state that no files were written, and stop.
 
-### 5. Clean up previous compilation
+### 5. Load previous compilation state
 
 - Check if `.claude/shared/AxonProject.manifest.md` exists
-- If absent, skip this step
-- If present, read it and find every previously emitted skill folder and class folder
-- Delete each listed skill folder from `.claude/skills/`
-- Delete each listed class folder from `.claude/shared/`
-- Delete `.claude/shared/AxonProject.manifest.md`
-- Report how many folders were removed
+- If absent: fresh compilation — set `previous_skill_folders` = empty set, `previous_class_folders` = empty set
+- If present: read it, extract the **Skill folders** list → `previous_skill_folders`, extract the **Class folders in shared** list → `previous_class_folders`
+- Do NOT delete anything yet — deletion happens in Step 8.5 after the new manifest is fully known
+- Track three counters: `created = 0`, `updated = 0`, `unchanged = 0`
+
+### 5a. Fingerprint computation
+
+A **source fingerprint** is a compact string derived from parsed source that uniquely represents the content of one emitted file. It is stored in the `source-hash` frontmatter field of each emitted file and used in subsequent compilations to detect changes without reading the full file.
+
+**Skill fingerprint** — concatenate, joined by `|`:
+1. `params:<p1,p2,...>` (empty string if no params)
+2. Each instruction bullet verbatim, in declaration order
+
+Example for `skill greet(name) { - greet name warmly - store in last_greeting }`:
+```
+params:name|greet name warmly|store in last_greeting
+```
+
+**Fields fingerprint** — concatenate, joined by `|`, one entry per field:
+```
+<field_name>:<visibility>:<default>
+```
+Example: `api_key:@private:default|report:@protected:none`
+
+**Main fingerprint** — concatenate all instruction bullets verbatim, joined by `|`.
+
+**How to use during emit (Steps 6 and 7):**
+1. Compute the fingerprint from parsed source
+2. Check if the target file already exists
+3. If it exists: read only its `source-hash` frontmatter line (do not read the whole file)
+4. Compare computed fingerprint to stored fingerprint:
+   - **Same** → skip writing, increment `unchanged`
+   - **Different or file absent** → write the file (full content), increment `created` or `updated`
 
 ### 6. Emit shared fields files
 
@@ -421,6 +448,10 @@ If any errors exist, emit them all using the format above, state that no files w
   - Write `fields.md` inside with this exact structure:
 
     ```markdown
+    ---
+    source-hash: field_name:@private:none|field_name:@protected:actual_default
+    ---
+
     # ClassName — fields
 
     | Field | Visibility | Default |
@@ -430,6 +461,7 @@ If any errors exist, emit them all using the format above, state that no files w
     ```
 
   - For fields with no default in source, write `none` — DO NOT invent values
+  - Apply the fingerprint check from Step 5a before writing — skip if fingerprint matches
 
 ### 7. Emit skill files
 
@@ -451,6 +483,7 @@ description: one sentence describing what this skill does
 argument-hint: "param1, param2"
 user-invocable: true
 disable-model-invocation: false
+source-hash: params:param1,param2|instruction bullet one|instruction bullet two
 ---
 
 ## User Input
@@ -489,6 +522,8 @@ Bind $ARGUMENTS to parameters in declaration order, or by name if named form is 
 (or "none" if this skill makes no calls)
 ```
 
+- Apply the fingerprint check from Step 5a before writing each file — skip if fingerprint matches
+
 **Skip emitting a skill file for:**
 - `@private` skills (not invokable)
 - `abstract` skills (no body — not invokable; record them in the manifest only as contract requirements)
@@ -497,6 +532,7 @@ Bind $ARGUMENTS to parameters in declaration order, or by name if named form is 
 **If a `.axm` file is present:**
 
 - Create folder `.claude/skills/main/`
+- Apply the fingerprint check from Step 5a before writing — skip if fingerprint matches
 - Write `SKILL.md` using this exact template:
 
 ```markdown
@@ -505,6 +541,7 @@ name: main
 description: entry point — orchestrates the full project workflow
 user-invocable: true
 disable-model-invocation: false
+source-hash: instruction bullet one|instruction bullet two
 ---
 
 ## Operating Constraints
@@ -562,8 +599,32 @@ Write `.claude/shared/AxonProject.manifest.md` with this exact structure:
 - ParentName
 ```
 
+### 8.5. Delete obsolete files
+
+After all emit steps complete, compute what is no longer needed:
+
+- `removed_skill_folders` = `previous_skill_folders` − `new_skill_folders`
+- `removed_class_folders` = `previous_class_folders` − `new_class_folders`
+
+For each folder in `removed_skill_folders`: delete `.claude/skills/<folder>/` and its contents
+For each folder in `removed_class_folders`: delete `.claude/shared/<folder>/` and its contents
+
+Track `deleted` counter = total folders removed.
+
 ### 9. Report success
 
-- List every folder and file written
-- Confirm the project compiled successfully
-- List every `/skillname` command now invokable
+Report a compact incremental summary:
+
+```
+Compiled successfully.
+
+  created:   N  (new files)
+  updated:   N  (changed files)
+  unchanged: N  (skipped — fingerprint matched)
+  deleted:   N  (removed — no longer in source)
+
+Invokable skills:
+  /classname-skillname
+  /classname-otherskill
+  /main
+```
