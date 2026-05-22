@@ -121,10 +121,10 @@ description: "Task list for Axon language specification"
 
 **Purpose**: Final coverage validation, FR traceability, and quality checks across the entire deliverable.
 
-- [ ] T028 Build FR coverage matrix in `specs/001-axon-language/checklists/requirements.md`: for every functional requirement FR-001 through FR-041, record which section of `docs/axon/spec.md` satisfies it; flag any FR with no section mapped; fix any gaps before marking complete
-- [ ] T029 [P] Scan `docs/axon/spec.md` for `[NEEDS CLARIFICATION]` markers: zero must remain; fix any found by consulting the relevant research decision (R1–R10) or data-model.md
-- [ ] T030 [P] Verify construct coverage in `docs/axon/spec.md`: confirm every language construct from FR-001 through FR-022 appears in at least one of the three example programs in §9 (class, abstract class, interface, extends, implements, four override modes, three visibility modifiers, fields, this.*, base.*, cross-class call, parallel, per_item pipe, on_complete pipe, @main, .ax and .axm extensions); record in coverage matrix
-- [ ] T031 [P] Reviewer byte-equivalence check for `docs/axon/examples-compiled/medium/`: re-derive the medium bundle independently from §7 of `docs/axon/spec.md` alone (without looking at the existing `examples-compiled/medium/` directory); compare every file byte-by-byte; confirm they are identical; record outcome in `specs/001-axon-language/checklists/requirements.md` — this validates SC-004 proxy and FR-038 precision
+- [X] T028 Build FR coverage matrix in `specs/001-axon-language/checklists/requirements.md`: for every functional requirement FR-001 through FR-041, record which section of `docs/axon/spec.md` satisfies it; flag any FR with no section mapped; fix any gaps before marking complete
+- [X] T029 [P] Scan `docs/axon/spec.md` for `[NEEDS CLARIFICATION]` markers: zero must remain; fix any found by consulting the relevant research decision (R1–R10) or data-model.md
+- [X] T030 [P] Verify construct coverage in `docs/axon/spec.md`: confirm every language construct from FR-001 through FR-022 appears in at least one of the three example programs in §9 (class, abstract class, interface, extends, implements, four override modes, three visibility modifiers, fields, this.*, base.*, cross-class call, parallel, per_item pipe, on_complete pipe, @main, .ax and .axm extensions); record in coverage matrix
+- [X] T031 [P] Reviewer byte-equivalence check for `docs/axon/examples-compiled/medium/`: re-derive the medium bundle independently from §7 of `docs/axon/spec.md` alone (without looking at the existing `examples-compiled/medium/` directory); compare every file byte-by-byte; confirm they are identical; record outcome in `specs/001-axon-language/checklists/requirements.md` — this validates SC-004 proxy and FR-038 precision
 
 ---
 
