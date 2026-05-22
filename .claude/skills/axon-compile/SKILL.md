@@ -43,6 +43,7 @@ the `.ax` and `.axm` source files to compile.
 - ALWAYS write `AxonProject.manifest.md` last
 - ALWAYS replace `call ClassName.skill_name(...)` with `/classname-skillname` in emitted SKILL.md files
 - ENRICH each non-call instruction bullet with 1–4 specific sub-bullets (see Step 7a) — enrichment is distinct from validation; SR-3 applies only to validation
+- ALWAYS wrap the `source-hash` frontmatter value in double quotes — the value contains colons and pipes that YAML would otherwise misparse
 - This skill is fully self-contained — do NOT look for external spec files
 
 ---
@@ -453,7 +454,7 @@ Example: `api_key:@private:default|report:@protected:none`
 
     ```markdown
     ---
-    source-hash: field_name:@private:none|field_name:@protected:actual_default
+    source-hash: "field_name:@private:none|field_name:@protected:actual_default"
     ---
 
     # ClassName — fields
@@ -504,7 +505,7 @@ description: one sentence describing what this skill does
 argument-hint: "param1, param2"
 user-invocable: true
 disable-model-invocation: false
-source-hash: params:param1,param2|instruction bullet one|instruction bullet two
+source-hash: "params:param1,param2|instruction bullet one|instruction bullet two"
 ---
 
 ## User Input
@@ -568,7 +569,7 @@ name: main
 description: entry point — orchestrates the full project workflow
 user-invocable: true
 disable-model-invocation: false
-source-hash: instruction bullet one|instruction bullet two
+source-hash: "instruction bullet one|instruction bullet two"
 ---
 
 ## Operating Constraints
