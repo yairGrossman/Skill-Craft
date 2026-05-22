@@ -6,10 +6,23 @@ $ErrorActionPreference = "Stop"
 
 $RAW  = "https://raw.githubusercontent.com/yairGrossman/Axon/main"
 
-Write-Host "==> Installing Axon developer tools" -ForegroundColor Cyan
+$projectDir = (Get-Location).Path
 
-# ── 1. axon-compile skill (global) ───────────────────────────────────────────
-$skillDir = Join-Path (Get-Location) ".claude\skills\axon-compile"
+Write-Host ""
+Write-Host "==> Axon installer" -ForegroundColor Cyan
+Write-Host "    Project root : $projectDir"
+Write-Host "    Skill path   : $projectDir\.claude\skills\axon-compile"
+Write-Host "    Example path : $projectDir\axon\"
+Write-Host ""
+$confirm = Read-Host "Install here? [Y/n]"
+if ($confirm -match '^[Nn]') {
+    Write-Host "Aborted. cd into your project folder first, then re-run." -ForegroundColor Yellow
+    exit
+}
+Write-Host ""
+
+# ── 1. axon-compile skill ────────────────────────────────────────────────────
+$skillDir = Join-Path $projectDir ".claude\skills\axon-compile"
 New-Item -ItemType Directory -Force -Path $skillDir | Out-Null
 Write-Host "    Fetching axon-compile skill..."
 Invoke-WebRequest "$RAW/.claude/skills/axon-compile/SKILL.md" `
@@ -31,7 +44,7 @@ if (Get-Command code -ErrorAction SilentlyContinue) {
 }
 
 # ── 3. Example project in ./axon/ ────────────────────────────────────────────
-$axonDir = Join-Path (Get-Location) "axon"
+$axonDir = Join-Path $projectDir "axon"
 New-Item -ItemType Directory -Force -Path $axonDir | Out-Null
 Write-Host "    Writing example project -> $axonDir"
 

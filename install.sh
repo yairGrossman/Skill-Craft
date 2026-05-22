@@ -7,10 +7,23 @@ set -e
 
 RAW="https://raw.githubusercontent.com/yairGrossman/Axon/main"
 
-echo "==> Installing Axon developer tools"
+PROJECT_DIR="$(pwd)"
 
-# ── 1. axon-compile skill (global) ───────────────────────────────────────────
-SKILL_DIR="$(pwd)/.claude/skills/axon-compile"
+echo ""
+echo "==> Axon installer"
+echo "    Project root : $PROJECT_DIR"
+echo "    Skill path   : $PROJECT_DIR/.claude/skills/axon-compile"
+echo "    Example path : $PROJECT_DIR/axon/"
+echo ""
+read -rp "Install here? [Y/n] " confirm
+if [[ "$confirm" =~ ^[Nn] ]]; then
+    echo "Aborted. cd into your project folder first, then re-run."
+    exit 0
+fi
+echo ""
+
+# ── 1. axon-compile skill ────────────────────────────────────────────────────
+SKILL_DIR="$PROJECT_DIR/.claude/skills/axon-compile"
 mkdir -p "$SKILL_DIR"
 echo "    Fetching axon-compile skill..."
 curl -fsSL "$RAW/.claude/skills/axon-compile/SKILL.md" -o "$SKILL_DIR/SKILL.md"
