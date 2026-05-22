@@ -10,6 +10,7 @@ Axon is an object-oriented programming language for orchestrating AI agents (spe
 
 ## Table of Contents
 
+- [Installation](#installation)
 - [Why Axon Exists](#why-axon-exists)
 - [Core Concepts](#core-concepts)
 - [A Quick Tour of the Syntax](#a-quick-tour-of-the-syntax)
@@ -21,6 +22,27 @@ Axon is an object-oriented programming language for orchestrating AI agents (spe
 - [How Claude Executes a Bundle](#how-claude-executes-a-bundle)
 - [Project Structure](#project-structure)
 - [Roadmap](#roadmap)
+
+---
+
+## Installation
+
+One command installs everything you need to develop in Axon:
+- the **axon-compile** skill for Claude Code
+- the **Axon VS Code extension** (syntax highlighting + snippets)
+- a ready-to-run **example project** in an `axon/` folder
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/yairGrossman/Axon/main/install.ps1 | iex
+```
+
+**macOS / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/yairGrossman/Axon/main/install.sh | bash
+```
+
+Run from inside any project folder. After installation, open the `axon/` folder in Claude Code and run `/axon-compile` to compile the example.
 
 ---
 
