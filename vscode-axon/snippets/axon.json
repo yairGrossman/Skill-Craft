@@ -1,0 +1,114 @@
+{
+  "Class": {
+    "prefix": "class",
+    "body": [
+      "class ${1:ClassName} {",
+      "",
+      "  fields {",
+      "    @private ${2:field_name}",
+      "  }",
+      "",
+      "  @public",
+      "  skill ${3:skill_name} {",
+      "    - ${4:describe what this skill does}",
+      "  }",
+      "",
+      "}"
+    ],
+    "description": "Axon class declaration"
+  },
+  "Abstract Class": {
+    "prefix": "aclass",
+    "body": [
+      "abstract class ${1:ClassName} {",
+      "",
+      "  @public",
+      "  abstract skill ${2:skill_name}(${3:param})",
+      "",
+      "  @public",
+      "  virtual skill ${4:optional_skill} {",
+      "    - ${5:default implementation, child may override}",
+      "  }",
+      "",
+      "}"
+    ],
+    "description": "Axon abstract class declaration"
+  },
+  "Interface": {
+    "prefix": "iface",
+    "body": [
+      "interface ${1:InterfaceName} {",
+      "  @public skill ${2:required_skill}(${3:param})",
+      "}"
+    ],
+    "description": "Axon interface declaration"
+  },
+  "Skill": {
+    "prefix": "skill",
+    "body": [
+      "@public",
+      "skill ${1:skill_name}(${2:param}) {",
+      "  - ${3:describe what this skill does}",
+      "}"
+    ],
+    "description": "Axon public skill"
+  },
+  "Virtual Skill": {
+    "prefix": "vskill",
+    "body": [
+      "@public",
+      "virtual skill ${1:skill_name}(${2:param}) {",
+      "  - ${3:default behavior — child may override}",
+      "}"
+    ],
+    "description": "Axon virtual skill (child may override)"
+  },
+  "Abstract Skill": {
+    "prefix": "askill",
+    "body": [
+      "@public",
+      "abstract skill ${1:skill_name}(${2:param})"
+    ],
+    "description": "Axon abstract skill signature (no body)"
+  },
+  "Parallel Block": {
+    "prefix": "parallel",
+    "body": [
+      "parallel {",
+      "  - call ${1:ClassA}.${2:skill_one}",
+      "  - call ${3:ClassB}.${4:skill_two}",
+      "}"
+    ],
+    "description": "Axon parallel concurrent block"
+  },
+  "Pipe per_item": {
+    "prefix": "pipe-item",
+    "body": [
+      "pipe(strategy: per_item) {",
+      "  - call ${1:Producer}.${2:produce}",
+      "  - call ${3:Consumer}.${4:consume}",
+      "}"
+    ],
+    "description": "Axon pipe — per_item strategy (stream items as produced)"
+  },
+  "Pipe on_complete": {
+    "prefix": "pipe-batch",
+    "body": [
+      "pipe(strategy: on_complete) {",
+      "  - call ${1:Producer}.${2:produce}",
+      "  - call ${3:Consumer}.${4:consume}",
+      "}"
+    ],
+    "description": "Axon pipe — on_complete strategy (wait for full batch)"
+  },
+  "Main Entry Point": {
+    "prefix": "main",
+    "body": [
+      "@main",
+      "skill main {",
+      "  - call ${1:ClassName}.${2:skill_name}(${3:param: value})",
+      "}"
+    ],
+    "description": "Axon main entry point (use in .axm files)"
+  }
+}

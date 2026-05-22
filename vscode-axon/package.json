@@ -1,0 +1,32 @@
+{
+  "name": "vscode-axon",
+  "displayName": "Axon Language",
+  "description": "Syntax highlighting for the Axon language (.ax, .axm)",
+  "version": "0.1.0",
+  "publisher": "axon",
+  "engines": { "vscode": "^1.74.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "axon",
+        "aliases": ["Axon", "axon"],
+        "extensions": [".ax", ".axm"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "axon",
+        "scopeName": "source.axon",
+        "path": "./syntaxes/axon.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "axon",
+        "path": "./snippets/axon.json"
+      }
+    ]
+  }
+}

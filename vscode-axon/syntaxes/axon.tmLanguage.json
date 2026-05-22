@@ -1,0 +1,161 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Axon",
+  "scopeName": "source.axon",
+  "fileTypes": ["ax", "axm"],
+  "patterns": [
+    { "include": "#strings" },
+    { "include": "#decorators" },
+    { "include": "#call-instruction" },
+    { "include": "#class-declaration" },
+    { "include": "#interface-declaration" },
+    { "include": "#extends-clause" },
+    { "include": "#implements-clause" },
+    { "include": "#skill-declaration" },
+    { "include": "#concurrent-blocks" },
+    { "include": "#strategy-keywords" },
+    { "include": "#override-modes" },
+    { "include": "#language-variables" },
+    { "include": "#declaration-keywords" },
+    { "include": "#constants" },
+    { "include": "#instruction-bullet" }
+  ],
+  "repository": {
+    "strings": {
+      "name": "string.quoted.double.axon",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.axon",
+          "match": "\\\\[\"\\\\]"
+        }
+      ]
+    },
+    "decorators": {
+      "name": "storage.modifier.axon",
+      "match": "@(public|protected|private|main)\\b"
+    },
+    "call-instruction": {
+      "patterns": [
+        {
+          "match": "\\b(call)\\s+(this|base)\\.([A-Za-z][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.other.call.axon" },
+            "2": { "name": "variable.language.axon" },
+            "3": { "name": "entity.name.function.axon" }
+          }
+        },
+        {
+          "match": "\\b(call)\\s+([A-Za-z][A-Za-z0-9_]*)\\.([A-Za-z][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.other.call.axon" },
+            "2": { "name": "entity.name.class.axon" },
+            "3": { "name": "entity.name.function.axon" }
+          }
+        }
+      ]
+    },
+    "class-declaration": {
+      "match": "\\b(abstract\\s+class|class)\\s+([A-Za-z][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.declaration.axon" },
+        "2": { "name": "entity.name.class.axon" }
+      }
+    },
+    "interface-declaration": {
+      "match": "\\b(interface)\\s+([A-Za-z][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.declaration.axon" },
+        "2": { "name": "entity.name.class.axon" }
+      }
+    },
+    "extends-clause": {
+      "match": "\\b(extends)\\s+([A-Za-z][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.declaration.axon" },
+        "2": { "name": "entity.name.class.axon" }
+      }
+    },
+    "implements-clause": {
+      "begin": "\\b(implements)\\b",
+      "end": "(?=[{])|$",
+      "beginCaptures": {
+        "1": { "name": "keyword.declaration.axon" }
+      },
+      "patterns": [
+        {
+          "name": "entity.name.class.axon",
+          "match": "\\b[A-Za-z][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "skill-declaration": {
+      "match": "\\b(skill)\\s+([A-Za-z][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "string.unquoted.skill.axon" },
+        "2": { "name": "entity.name.function.axon" }
+      }
+    },
+    "concurrent-blocks": {
+      "name": "keyword.control.concurrent.axon",
+      "match": "\\b(parallel|pipe)\\b"
+    },
+    "strategy-keywords": {
+      "name": "keyword.other.strategy.axon",
+      "match": "\\b(strategy|per_item|on_complete)\\b"
+    },
+    "override-modes": {
+      "name": "storage.modifier.override.axon",
+      "match": "\\b(abstract|virtual|sealed)\\b"
+    },
+    "language-variables": {
+      "patterns": [
+        {
+          "match": "\\b(this|base)\\.([A-Za-z][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "variable.language.axon" },
+            "2": { "name": "variable.other.member.axon" }
+          }
+        },
+        {
+          "name": "variable.language.axon",
+          "match": "\\b(this|base)\\b"
+        }
+      ]
+    },
+    "declaration-keywords": {
+      "name": "keyword.declaration.axon",
+      "match": "\\b(fields)\\b"
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.axon",
+          "match": "\\b(true|false)\\b"
+        },
+        {
+          "name": "constant.numeric.axon",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "instruction-bullet": {
+      "begin": "^(\\s*)(-)(?= )",
+      "end": "$",
+      "beginCaptures": {
+        "2": { "name": "entity.name.type.axon" }
+      },
+      "patterns": [
+        {
+          "match": "`([^`]+)`",
+          "name": "variable.parameter.axon"
+        },
+        { "include": "#call-instruction" },
+        { "include": "#language-variables" },
+        { "include": "#strings" },
+        { "include": "#constants" }
+      ]
+    }
+  }
+}
