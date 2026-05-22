@@ -2,6 +2,8 @@
 
 Axon is an object-oriented programming language for orchestrating AI agents (specifically Claude). Instead of writing prompts directly, you write structured classes and skills — and the Axon compiler turns them into a self-describing bundle that Claude reads and executes.
 
+**Both the compiler and the runtime are Claude.** There is no classical code involved. The compiler is an Axon skill — a precise set of instructions that Claude follows to parse source files, validate structural rules, and emit the bundle.
+
 **The idea in one sentence**: take all the discipline that makes software maintainable — encapsulation, inheritance, interfaces, visibility rules — and apply it to prompt engineering.
 
 ---
@@ -101,13 +103,7 @@ The compiler enforces these rules at every call site. Violations are caught at c
 .axm  →  the optional entry point (at most one per project)
 ```
 
-Compile a project directory:
-
-```
-axon compile ./my-project
-```
-
-The compiler emits a **bundle directory** you hand to Claude:
+To compile a project, give Claude the Axon compiler skill and your source directory. Claude reads the skill, parses your `.ax` and `.axm` files, validates all structural rules, and emits a **bundle directory** you hand back to Claude to execute:
 
 ```
 my-project-compiled/
@@ -269,15 +265,16 @@ skill main {
 
 ## How the Compiler Works
 
-The compiler has five phases:
+The Axon compiler is not classical code — it is an Axon skill that Claude follows. When you invoke the compiler skill, Claude executes these steps:
 
-1. **Lexer** — tokenizes `.ax` and `.axm` source files
-2. **Parser** — builds an AST from the token stream using the formal grammar
-3. **Resolver** — resolves all cross-class references, builds the inheritance chain, links interface implementations
-4. **Validator** — enforces all semantic rules (visibility, abstract skill coverage, no cyclical inheritance, no sealed overrides, etc.)
-5. **Emitter** — writes the output bundle directory
+1. **Discover sources** — read all `.ax` files and at most one `.axm` file from the source directory
+2. **Parse structure** — for each file, identify the class/abstract class/interface declaration, its fields, its skills with visibility and override mode, and its instruction bullets (treated as opaque text)
+3. **Resolve references** — build the class graph, walk inheritance chains, and for every `call` instruction verify that the referenced class and skill exist and are accessible
+4. **Validate rules** — enforce all structural rules: abstract skills implemented, interface contracts satisfied, visibility respected, sealed skills not overridden, no cyclical inheritance, no duplicate class names, at most one `@main`
+5. **Report errors** — if any validation fails, report every error (never just the first) with file, line, and a suggested fix; do not emit a partial bundle
+6. **Emit bundle** — if validation passes, write the compiled bundle directory following the format specified in the language spec
 
-If any error is found, compilation stops, no bundle is written, and the compiler exits with a non-zero status. Every error includes the source file, line and column, a human-readable message, and a suggested fix.
+Every error includes the source file, line and column, a human-readable message, and a suggested fix.
 
 ### The 10 compiler errors
 
@@ -326,7 +323,7 @@ The `_manifest.axc` is the map. Claude reads it first to understand the class gr
 6. **Run `parallel` and `pipe` blocks** — `parallel` launches concurrent agents with no shared state; `pipe(strategy: per_item)` streams items; `pipe(strategy: on_complete)` waits for the producer to finish.
 7. **Surface errors** — if a skill cannot be resolved or an instruction is ambiguous, Claude reports the issue in plain language.
 
-Claude is the runtime. The compiler is classical code. The division of labor is intentional: the compiler handles structure and validation; Claude handles reasoning and execution.
+Claude is both the compiler and the runtime. The division of labor is intentional: the compiler skill handles structure and validation; the runtime skill handles reasoning and execution. No classical programming language is required at any stage.
 
 ---
 
@@ -361,7 +358,7 @@ The canonical language specification lives at [docs/axon/spec.md](docs/axon/spec
 
 ## Roadmap
 
-The current deliverable is the **language specification**. A separate project will implement the compiler.
+The current deliverable is the **language specification** and the **Axon compiler skill** — a Claude skill that reads Axon source files and emits a compiled bundle. Because the compiler is Claude itself, there is no separate implementation project needed.
 
 Deferred to a future version:
 

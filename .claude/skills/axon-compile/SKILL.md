@@ -36,6 +36,7 @@ the `.ax` and `.axm` source files to compile.
 - NEVER interpret instruction bullet text — preserve it verbatim character-for-character
 - NEVER write any skill files if any validation error exists
 - NEVER write a skill file for `@private` skills (they are not invokable)
+- NEVER write a skill file for `abstract` skills — they have no body and are not invokable; they appear only in the manifest as contract requirements
 - NEVER write a skill file for skills a child inherits unchanged from its parent
 - NEVER invent field defaults — if a field has no default in source, write `none`
 - ALWAYS collect ALL errors before reporting — never stop at the first one
@@ -490,6 +491,7 @@ Bind $ARGUMENTS to parameters in declaration order, or by name if named form is 
 
 **Skip emitting a skill file for:**
 - `@private` skills (not invokable)
+- `abstract` skills (no body — not invokable; record them in the manifest only as contract requirements)
 - Skills a child inherits unchanged from its parent (the parent's file remains canonical)
 
 **If a `.axm` file is present:**
