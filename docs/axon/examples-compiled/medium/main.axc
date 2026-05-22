@@ -1,0 +1,5 @@
+ENTRY: main
+DEPENDS ON:
+  - _skills/Research.research.skill
+BODY:
+  - call ResearchCompany.research(topic: "Apple Inc")

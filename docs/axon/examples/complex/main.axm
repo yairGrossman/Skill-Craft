@@ -1,0 +1,14 @@
+@main
+skill main {
+  - call ResearchCompany.research(topic: "Apple Inc")
+
+  parallel {
+    - call FileExporter.export_to_pdf(content: ResearchCompany.report, filename: "apple.pdf")
+    - call EmailSender.send(recipient: "team@co.com", subject: "Apple research complete", body: ResearchCompany.report)
+  }
+
+  pipe(strategy: per_item) {
+    - call QuestionGenerator.generate_questions(topic: "Apple Inc", amount: 5)
+    - call EmailSender.send(recipient: "team@co.com", subject: "Follow-up question", body: ResearchCompany.report)
+  }
+}

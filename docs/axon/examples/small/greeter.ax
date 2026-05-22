@@ -1,0 +1,17 @@
+class Greeter {
+
+  fields {
+    @private last_greeting
+  }
+
+  @public
+  skill greet(name) {
+    - greet name warmly
+    - store the greeting in this.last_greeting
+  }
+
+  @public
+  skill recall {
+    - return this.last_greeting
+  }
+}

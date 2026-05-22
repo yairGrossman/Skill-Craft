@@ -1,0 +1,27 @@
+abstract class Research {
+
+  fields {
+    @protected sources
+    @public report
+    @private is_validated = false
+  }
+
+  @public
+  skill research(topic) {
+    - call this.gather_sources(topic)
+    - call this.validate_sources
+    - call this.write_report
+  }
+
+  @protected
+  abstract skill gather_sources(topic)
+
+  @protected
+  abstract skill validate_sources
+
+  @protected
+  virtual skill write_report {
+    - draft a structured report summarizing the validated sources in this.sources
+    - store the draft in this.report
+  }
+}

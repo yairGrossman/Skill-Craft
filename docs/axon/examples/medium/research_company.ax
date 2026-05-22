@@ -1,0 +1,24 @@
+class ResearchCompany extends Research implements Researchable {
+
+  fields {
+    @private preferred_database = "SEC EDGAR"
+  }
+
+  @protected
+  skill gather_sources(topic) {
+    - search financial databases (starting with this.preferred_database) for filings related to topic
+    - store all results in this.sources
+  }
+
+  @protected
+  skill validate_sources {
+    - check that every source in this.sources is from a primary or reputable financial outlet
+    - set this.is_validated to true once all sources pass the check
+  }
+
+  @protected
+  skill write_report {
+    - call base.write_report
+    - add a financial highlights section to this.report
+  }
+}

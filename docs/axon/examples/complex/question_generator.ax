@@ -1,0 +1,8 @@
+class QuestionGenerator {
+
+  @public
+  skill generate_questions(topic, amount = 10) {
+    - generate `amount` thoughtful questions about `topic`
+    - emit each question as it is generated
+  }
+}

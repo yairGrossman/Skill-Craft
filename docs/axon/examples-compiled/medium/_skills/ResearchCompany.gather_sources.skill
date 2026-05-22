@@ -1,0 +1,11 @@
+CLASS: ResearchCompany
+SKILL: gather_sources
+VISIBILITY: @protected
+OVERRIDE_MODE: implements abstract from Research
+PARAMS: topic
+INHERITED FIELDS FROM: _fields/Research.fields
+OWN FIELDS: _fields/ResearchCompany.fields
+DEPENDS ON:
+BODY:
+  - search financial databases (starting with this.preferred_database) for filings related to topic
+  - store all results in this.sources
