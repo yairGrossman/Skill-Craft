@@ -19,6 +19,6 @@ desktop.ini
 .env.local
 
 # Spec / planning artifacts
-.claude/speckit/
+.claude/skills/speckit-*/
 .specify/
 specs/
