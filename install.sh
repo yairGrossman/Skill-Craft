@@ -32,7 +32,7 @@ else
 fi
 
 # ── 3. Example project in ./axon/ ────────────────────────────────────────────
-AXON_DIR="$(pwd)/axon"
+AXON_DIR="$(pwd)/axon/examples"
 mkdir -p "$AXON_DIR"
 echo "    Writing example project -> $AXON_DIR"
 
@@ -112,4 +112,4 @@ EOF
 
 echo "    Example project written (4 files)"
 echo ""
-echo "Done. Open axon/ in Claude Code and run /axon-compile to compile."
+echo "Done. Open axon/examples/ in Claude Code and run /axon-compile to compile."

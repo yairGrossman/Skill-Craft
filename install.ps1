@@ -33,7 +33,7 @@ if (Get-Command code -ErrorAction SilentlyContinue) {
 }
 
 # ── 3. Example project in ./axon/ ────────────────────────────────────────────
-$axonDir = Join-Path $projectDir "axon"
+$axonDir = Join-Path $projectDir "axon\examples"
 New-Item -ItemType Directory -Force -Path $axonDir | Out-Null
 Write-Host "    Writing example project -> $axonDir"
 
@@ -113,4 +113,4 @@ skill main {
 
 Write-Host "    Example project written (4 files)" -ForegroundColor Green
 Write-Host ""
-Write-Host "Done. Open axon/ in Claude Code and run /axon-compile to compile." -ForegroundColor Cyan
+Write-Host "Done. Open axon/examples/ in Claude Code and run /axon-compile to compile." -ForegroundColor Cyan
