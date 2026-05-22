@@ -10,7 +10,7 @@ RAW="https://raw.githubusercontent.com/yairGrossman/Axon/main"
 echo "==> Installing Axon developer tools"
 
 # ── 1. axon-compile skill (global) ───────────────────────────────────────────
-SKILL_DIR="$HOME/.claude/skills/axon-compile"
+SKILL_DIR="$(pwd)/.claude/skills/axon-compile"
 mkdir -p "$SKILL_DIR"
 echo "    Fetching axon-compile skill..."
 curl -fsSL "$RAW/.claude/skills/axon-compile/SKILL.md" -o "$SKILL_DIR/SKILL.md"
