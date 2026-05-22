@@ -5,12 +5,11 @@
 $ErrorActionPreference = "Stop"
 
 $RAW  = "https://raw.githubusercontent.com/yairGrossman/Axon/main"
-$REPO = "https://github.com/yairGrossman/Axon"
 
 Write-Host "==> Installing Axon developer tools" -ForegroundColor Cyan
 
 # ── 1. axon-compile skill (global) ───────────────────────────────────────────
-$skillDir = Join-Path (Get-Location) ".claude\skills\axon-compile"
+$skillDir = Join-Path (Get-Location) "axon\.claude\skills\axon-compile"
 New-Item -ItemType Directory -Force -Path $skillDir | Out-Null
 Write-Host "    Fetching axon-compile skill..."
 Invoke-WebRequest "$RAW/.claude/skills/axon-compile/SKILL.md" `
