@@ -416,12 +416,14 @@ If any errors exist, emit them all using the format above, state that no files w
 A **source fingerprint** is a compact string derived from parsed source that uniquely represents the content of one emitted file. It is stored in the `source-hash` frontmatter field of each emitted file and used in subsequent compilations to detect changes without reading the full file.
 
 **Skill fingerprint** — concatenate, joined by `|`:
-1. `params:<p1,p2,...>` (empty string if no params)
-2. Each instruction bullet verbatim, in declaration order
+1. `visibility:<@public|@protected>` — the skill's visibility modifier
+2. `mode:<default|virtual|sealed>` — the skill's override mode (`default` if no modifier)
+3. `params:<p1,p2=default2,...>` — comma-separated parameter names; if a parameter has a default, append `=<default>` immediately after the name (no spaces); write empty string if no params
+4. Each instruction bullet verbatim, in declaration order
 
-Example for `skill greet(name) { - greet name warmly - store in last_greeting }`:
+Example for `@public virtual skill greet(name, lang = en) { - greet name warmly - store in last_greeting }`:
 ```
-params:name|greet name warmly|store in last_greeting
+visibility:@public|mode:virtual|params:name,lang=en|greet name warmly|store in last_greeting
 ```
 
 **Fields fingerprint** — concatenate, joined by `|`, one entry per field:
