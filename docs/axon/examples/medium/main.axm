@@ -1,4 +1,4 @@
 @main
 skill main {
-  - call ResearchCompany.research(topic: "Apple Inc")
+  - call ResearchCompany.research(topic: Apple Inc)
 }

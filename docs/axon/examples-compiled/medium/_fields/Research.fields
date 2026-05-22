@@ -1,4 +1,0 @@
-CLASS: Research
-@protected sources
-@protected report
-@private is_validated = false

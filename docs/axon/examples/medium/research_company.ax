@@ -1,7 +1,7 @@
 class ResearchCompany extends Research implements Researchable {
 
   fields {
-    @private preferred_database = "SEC EDGAR"
+    @private preferred_database = SEC EDGAR
   }
 
   @protected

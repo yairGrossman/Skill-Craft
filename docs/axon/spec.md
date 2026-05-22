@@ -4,7 +4,7 @@
 **Status**: Canonical reference
 **Last revised**: 2026-05-21
 
-Axon is an object-oriented programming language for orchestrating LLM agents. The compiler is classical code; the runtime is a large language model (Claude) that reads the compiled bundle and executes its skills. This document is the contract a competent engineer needs to build a working compiler and a contract a runtime needs to execute the bundle correctly.
+Axon is an object-oriented programming language for orchestrating LLM agents. The Axon compiler is an Axon skill executed by Claude. There is no classical code to write. Claude reads the compiler skill, which instructs it precisely how to parse Axon source files, validate them, and emit a bundle. This document is the contract that the compiler skill and the runtime skill follow.
 
 The sections below follow the order required by FR-032 through FR-041 of the feature specification.
 
@@ -24,7 +24,7 @@ Three design principles shape every decision in the rest of this document.
 
 1. **State lives in classes, not in instances.** Axon has no `new`, no constructors, no `this` in the Java/C# sense of "the instance currently executing the method." Every class is essentially a static namespace of behavior and shared memory. A class's `fields { }` block is the only mutable state it owns; every skill of that class sees the same fields. This matches how LLM agents actually behave — they are stateless callable functions whose only memory is whatever data has been threaded into their inputs — and removes a whole category of accidental complexity (object lifetimes, identity, equality, dependency injection) from the language.
 
-2. **Semantics are LLM-driven; the compiler is classical.** The compiler does what compilers have always done: parses source, resolves references, checks visibility, enforces inheritance contracts, validates threading constructs, and emits a deterministic output. It does **not** attempt to understand the prose inside a skill body. Each instruction bullet is, to the compiler, an opaque string. The runtime — an LLM — supplies meaning. This division of labor is what makes Axon implementable in roughly 2,000–5,000 lines of classical code while still being able to express tasks that no classical language can.
+2. **Both the compiler and the runtime are Claude.** There is no classical compiler. The Axon compiler is an Axon skill that instructs Claude how to read `.ax` and `.axm` source files, validate structural rules (inheritance contracts, visibility, interface contracts, override modes), and emit the compiled bundle. The Axon runtime is a separate Axon skill that instructs Claude how to read a compiled bundle and execute its skills. Each instruction bullet inside a skill body remains opaque to both stages — the compiler validates structure and references, the runtime supplies meaning and executes behavior.
 
 3. **Logic is free speech.** Axon defines no `if`, no `else`, no `for`, no `while`, no `switch`, no `try/catch`, no arithmetic operators, no comparison operators. Conditionals, iteration, and exception handling are expressed as natural-language instruction bullets and interpreted by the LLM. The skill body `- if the topic mentions a public company, gather recent SEC filings; otherwise, fall back to news search` is not parsed for control flow. It is preserved verbatim and handed to Claude, which is fully capable of branching on natural-language criteria. This is Axon's most disorienting departure from classical languages, and it is deliberate. Trying to formalize natural language into a fixed vocabulary of control words would defeat the language's reason for existing.
 
@@ -50,7 +50,7 @@ These constraints satisfy FR-032. The remaining sections of this document formal
 
 ## §2. Formal grammar
 
-This section gives the complete formal grammar of the Axon language in **ISO/IEC 14977 EBNF** (per FR-033). A compiler implementation that conforms to this grammar must accept every Axon source file these productions admit and must reject every file they do not, modulo the semantic rules in §4.
+The formal grammar below is the structural reference that the Axon compiler skill follows when reading source files. Claude uses this grammar to understand what constitutes a valid Axon program. It is expressed in EBNF for precision and human readability, not as input to a classical parser generator.
 
 ### 2.1 EBNF metasyntax (the conventions used below)
 
@@ -158,11 +158,14 @@ BaseCall        = "base" "." Identifier [ "(" ArgList ")" ] ;
 
 CrossCall       = Identifier "." Identifier [ "(" ArgList ")" ] ;
 
-ArgList         = NamedArg { "," NamedArg } ;
-
+ArgList         = NamedArgList | PositionalArgList ;
+NamedArgList    = NamedArg { "," NamedArg } ;
+PositionalArgList = ArgumentValue { "," ArgumentValue } ;
 NamedArg        = Identifier ":" ArgumentValue ;
-
-ArgumentValue   = Literal | DottedReference ;
+ArgumentValue   = Value | DottedReference ;
+Value           = QuotedString | UnquotedValue ;
+QuotedString    = '"' { any character except unescaped '"' } '"' ;
+UnquotedValue   = ? any sequence of characters up to the next "," or ")" ? ;
 
 DottedReference = Identifier "." Identifier ;
                   (* used for cross-class @public field reads, e.g., ResearchCompany.report *)
@@ -215,8 +218,9 @@ Newline         = ? U+000A or U+000D U+000A ? ;
 
 - An `.ax` file contains exactly one `AxFile` payload — one of `ClassDecl`, `AbstractClassDecl`, or `InterfaceDecl`. Multiple top-level declarations in one file are a parse error (see §4, SR-22).
 - An `.axm` file contains exactly one `AxmFile` payload — that is, exactly one `MainDecl`. Multiple `@main` skills in one file produce error E10 (§6).
-- `OpaqueLine` is intentionally unbounded — the lexer produces it as a single token and does not re-tokenize its contents. The resolver later scans the leading characters of each `OpaqueLine` token to detect the `call ` prefix and parses the remainder as a `CallExpression` for cross-reference checking. This is the boundary between the compiler's classical responsibilities and the runtime's free-speech responsibilities (research R6, R7).
+- `OpaqueLine` is intentionally unbounded — the compiler skill reads it as a single line and does not re-tokenize its contents. The compiler skill scans the leading characters of each `OpaqueLine` to detect the `call ` prefix and parses the remainder as a `CallExpression` for cross-reference checking. This is the boundary between the compiler skill's structural responsibilities and the runtime skill's free-speech responsibilities (research R6, R7).
 - `DottedReference` is used only in argument-value position, not in instruction-text position. Inside `OpaqueLine` text, dotted identifiers are part of the opaque string and the compiler does not resolve them.
+- `UnquotedValue` is an LLM-interpreted rule — the compiler skill reads up to the next delimiter (`,` or `)`). This is why the LLM compiler is better suited than a classical parser: it handles the ambiguity of natural-language values by understanding intent rather than requiring strict tokenization.
 - Override-mode modifiers `abstract`, `virtual`, `sealed` are mutually exclusive in a single `Skill` production. The grammar admits at most one because `OverrideMode` is a single non-terminal that expands to a single keyword.
 - A `Skill` with an empty `OverrideMode` and no `{ SkillBody }` brace block is a parse error. Only `abstract` skills are permitted to omit the body. This constraint is structural (see §4, SR-23) and is enforced by the validator.
 
@@ -321,17 +325,21 @@ The parameter `amount` defaults to the integer literal `10`. At the call site, `
 
 ### 3.4 Literal values (defaults and arguments)
 
-Axon supports exactly three literal kinds (research R5): **string**, **integer**, **boolean**. Other forms (floats, lists, null, objects) are not supported in v1.
+Axon does not enforce types on field defaults or argument values. Parameters and fields are untyped — the LLM infers meaning from context. A value like `Apple Inc`, `10`, `false`, or `critical thinking style` is valid in any position. The LLM compiler understands intent without requiring the developer to annotate types.
 
-**Grammar reference**: `Literal`, `StringLit`, `IntegerLit`, `BooleanLit` (§2.2).
+For structured `call` expressions where the compiler needs to parse argument boundaries, the comma between arguments and the closing parenthesis serve as delimiters. Multi-word values in named arguments are delimited by the comma of the next argument or the closing parenthesis — quotes are not required:
 
-| Kind | Examples | Notes |
-|---|---|---|
-| String | `"Yair"`, `"Apple Inc"`, `"hello \"world\""` | Double-quoted. `\"` and `\\` are the only recognized escape sequences. |
-| Integer | `0`, `10`, `-1`, `42` | Optional leading `-`. No floats. |
-| Boolean | `true`, `false` | Lowercase. |
+```axon
+- call generate_questions(topic: Apple Inc, amount: 10, style: critical thinking)
+```
 
-Literals appear in two positions: as a field's default value (`@protected step = 1`) and as a named-argument value at a call site (`greet(name: "Yair")`).
+Quoted strings are also accepted for developers who prefer them:
+
+```axon
+- call generate_questions(topic: "Apple Inc", amount: 10, style: "critical thinking")
+```
+
+Both forms are valid and equivalent. The LLM compiler understands both.
 
 ### 3.5 Visibility modifiers
 
@@ -410,13 +418,26 @@ skill main {
 }
 ```
 
-Arguments at call sites are named (research R4, FR-008). The form is always `parameter_name: value`. If the called skill has a parameter with a default, the call site MAY omit that argument; if a parameter has no default, the argument is required. Mixing positional with named arguments is not permitted in v1 (see §10.2).
+Arguments at call sites may be **named** or **positional** — the developer chooses whichever is more natural. Named and positional forms may not be mixed in the same call.
 
-**Zero-argument calls omit parentheses** in the source text:
-
+**Named arguments** — provide the parameter name followed by a colon and the value. May be provided in any order. Defaulted parameters may be omitted:
 ```axon
-- call Greeter.recall                          // no parentheses
-- call Greeter.greet(name: "Yair")             // parentheses with named arg
+- call generate_questions(topic: Apple Inc, style: critical thinking)
+- call Greeter.greet(name: Yair)
+```
+
+**Positional arguments** — provide values in parameter declaration order. Defaulted parameters at the end may be omitted:
+```axon
+- call generate_questions(Apple Inc)
+- call Greeter.greet(Yair)
+```
+
+**Multi-word values** do not require quotes. The comma between arguments and the closing parenthesis act as natural delimiters. Quoted strings are accepted for developers who prefer them but are never required.
+
+**Zero-argument calls** omit parentheses:
+```axon
+- call Greeter.recall
+- call this.validate_sources
 ```
 
 ### 3.8 `@main` skill in `.axm` files
@@ -633,7 +654,7 @@ parallel {
 
 The two calls launch concurrently. Each branch has its own copy of any input arguments; neither branch observes the other's intermediate state. The block returns control to the parent skill once both branches have completed.
 
-The block contains only call instructions — nested threading blocks (a `parallel` inside a `parallel`, or a `pipe` inside a `parallel`) are not permitted in v1 (see §10.10).
+The block contains only call instructions — nested threading blocks (a `parallel` inside a `parallel`, or a `pipe` inside a `parallel`) are not permitted in v1 (see §10.9).
 
 ### 3.18 `pipe(strategy: per_item) { }` block
 
@@ -750,45 +771,39 @@ The compiler does not parse `if ... otherwise ...`, does not check that "5" is a
 
 **Compiler behavior**: accept (no analysis performed). Cites FR-018; research R7.
 
-#### SR-4 — Named-argument-only binding at call sites
+#### SR-4 — Argument binding at call sites
 
-**Rule**. Every argument at a call site MUST be of the form `parameter_name: value`. Positional arguments are not permitted in v1.
-
-**Example** (violation):
+**Rule**. Arguments at a call site MUST be either all named or all positional. Mixing named and positional in a single call is not permitted. Named arguments match by parameter name in any order; positional arguments match by parameter declaration order. The compiler verifies that every required parameter (one without a default) is supplied. The LLM resolves semantic compatibility at runtime.
 
 ```axon
-- call Greeter.greet("Yair")              // VIOLATION: positional argument
+// named — any order, defaulted params may be omitted
+- call generate_questions(topic: Apple Inc, style: critical thinking)
+
+// positional — declaration order, trailing defaults may be omitted
+- call generate_questions(Apple Inc)
+
+// VIOLATION: mixing named and positional in one call
+- call generate_questions(Apple Inc, style: critical thinking)
 ```
 
-Corrected:
+**Compiler behavior**: accept named-only or positional-only calls; reject mixed calls. Verify required parameters are supplied. Cites FR-008.
+
+#### SR-5 — Default values
+
+**Rule**. A field's default value or a parameter's default value MUST be a simple value that the LLM compiler can recognize as a constant — a quoted string, a number, a boolean (`true`/`false`), or an unquoted word. Field references, skill calls, and compound expressions as defaults are not permitted in v1.
 
 ```axon
-- call Greeter.greet(name: "Yair")
+// valid defaults
+@private is_validated = false
+@private max_sources = 50
+@private label = research
+@private greeting = "hello world"
+
+// VIOLATION: default is a field reference
+@public start = this.compute_start()
 ```
 
-**Compiler behavior**: reject the violation as a parse error (the `CallExpression` production requires `NamedArg` form). Cites FR-008; research R4.
-
-#### SR-5 — Literal-only defaults
-
-**Rule**. A field's default value or a parameter's default value MUST be a literal (string, integer, or boolean). Field references, skill calls, expressions, or compound literals as defaults are not permitted in v1.
-
-**Example** (violation):
-
-```axon
-fields {
-  @public start = this.compute_start()    // VIOLATION: default is not a literal
-}
-```
-
-Corrected:
-
-```axon
-fields {
-  @public start = 0
-}
-```
-
-**Compiler behavior**: reject as a parse error (the `Literal` production in `FieldDecl` and `Param` does not admit references or expressions). Cites FR-011; research R5.
+**Compiler behavior**: accept simple value defaults; reject references and expressions.
 
 #### SR-6 — DottedReference classification
 
@@ -1145,152 +1160,47 @@ skill greet(name)     // VIOLATION — non-abstract requires body
 
 ## §5. Compiler architecture
 
-This section describes the phases an Axon compiler MUST implement (per FR-036) and what each phase consumes and produces. The phases are described in terms of inputs, outputs, and responsibilities; the implementation language is not prescribed. Any language whose toolchain can read a source directory and write a deterministic output directory is acceptable.
+The Axon compiler is not classical code. It is an Axon skill — a precise set of instructions that Claude follows to transform `.ax` and `.axm` source files into a compiled bundle. The runtime is a second Axon skill that Claude follows to execute the bundle.
 
-An Axon compiler has five phases:
+### 5.1 Stage 1 — The compiler skill
+
+The compiler skill instructs Claude to:
+
+1. **Discover sources** — read all `.ax` files and at most one `.axm` file from the source directory
+2. **Parse structure** — for each file, identify the class, abstract class, or interface declaration; its fields block; its skills with visibility and override mode; its parameter lists; and its instruction bullets. Instruction bullets are treated as opaque text and are not interpreted.
+3. **Resolve references** — build the class graph; walk inheritance chains; for every `call` instruction, verify the referenced class and skill exist and are accessible from the call site
+4. **Validate rules** — enforce all structural rules: abstract skills implemented, interface contracts satisfied, visibility respected, sealed skills not overridden, no cyclical inheritance, no duplicate class names, at most one `@main`
+5. **Report errors** — if any validation fails, report all errors (never just the first) with file, line, and suggested fix; do not emit a partial bundle
+6. **Emit bundle** — if validation passes, write the compiled bundle directory following the format specified in §7 exactly, honoring all DRY guarantees
+
+### 5.2 Stage 2 — The runtime skill
+
+The runtime skill instructs Claude to:
+
+1. **Read the manifest** — load `_manifest.axc` first to understand the class graph, inheritance chains, interface implementations, and skill locations
+2. **Resolve the entry point** — if `main.axc` is present, begin execution there; otherwise treat the bundle as a callable library awaiting user instruction
+3. **Execute skills** — for each skill call, locate the skill file via the manifest, load its fields context, and execute its instruction bullets in order
+4. **Honor threading** — execute `parallel {}` blocks as concurrent agents with no shared intermediate state; execute `pipe(strategy: per_item)` blocks in streaming mode; execute `pipe(strategy: on_complete)` blocks in batch mode
+5. **Resolve references at runtime** — `this.*` resolves against the executing class's manifest entry; `base.*` walks the ancestor chain via the manifest
+6. **Surface errors** — if an instruction is ambiguous or unexecutable, report the issue in plain language identifying the failing skill and the problem
+
+### 5.3 Toolchain
 
 ```
-                    Source files (.ax, .axm)
-                              |
-                              v
-                       +---------------+
-                       |  1. Lexer     |  source text  -> token stream
-                       +---------------+
-                              |
-                              v
-                       +---------------+
-                       |  2. Parser    |  tokens       -> AST (per-file)
-                       +---------------+
-                              |
-                              v
-                       +---------------+
-                       |  3. Resolver  |  AST + class graph -> annotated AST
-                       +---------------+
-                              |
-                              v
-                       +---------------+
-                       |  4. Validator |  annotated AST -> error list (may be empty)
-                       +---------------+
-                              |
-                              v
-                       +---------------+
-                       |  5. Emitter   |  annotated AST -> bundle directory
-                       +---------------+
-                              |
-                              v
-                       Bundle directory (see §7)
+.ax source files + optional .axm
+        ↓
+Claude reads AxonCompiler.compile skill
+        ↓
+validates structure and references
+        ↓ (errors block emission)
+emits compiled bundle directory
+        ↓
+Claude reads AxonRuntime.execute skill
+        ↓
+reads _manifest.axc → executes skills
 ```
 
-If any phase produces errors, the validator's error list is non-empty and the compiler MUST NOT invoke the emitter. The compiler MUST emit all collected errors (not only the first) and exit with non-zero status (FR-029).
-
-### 5.1 Phase 1 — Lexer
-
-**Input**: the contents of each `.ax` and `.axm` file in the project source directory, as UTF-8 text.
-
-**Output**: a stream of tokens per file. Token kinds include the keyword terminals listed in §2 (`class`, `abstract`, `interface`, `extends`, `implements`, `skill`, `fields`, `parallel`, `pipe`, `strategy`, `per_item`, `on_complete`, `this`, `base`, `call`, `true`, `false`), the modifier terminals (`@public`, `@protected`, `@private`, `@main`), the punctuation terminals (`{`, `}`, `(`, `)`, `:`, `,`, `=`, `.`, `-`), identifier tokens, string-literal tokens, integer-literal tokens, and newline tokens (significant only for terminating `OpaqueLine` tokens).
-
-**Responsibilities**:
-
-- Decode the source as UTF-8. Reject the file with a parse error if it is not valid UTF-8.
-- Collapse runs of horizontal whitespace (spaces and tabs) into a single ignorable separator.
-- Recognize and produce the keyword and punctuation tokens listed above. Keywords are reserved — an identifier may not match any of them.
-- When a `-` appears at the start of a line (after optional leading whitespace), the lexer MUST consume the rest of the line as a single `OpaqueLine` token without further analysis. The terminating newline is also consumed and produced as a `Newline` token.
-- Normalize line endings: both `\n` (U+000A) and `\r\n` (U+000D U+000A) are valid; the lexer treats them as identical and produces a single `Newline` token.
-- Do **not** strip leading/trailing whitespace from `OpaqueLine` content; preserve it byte-for-byte for emission (the validator/emitter may apply its own normalization, but the lexer must not).
-- Report a lexical error if the file contains characters that cannot belong to any token (e.g., a backtick outside a string literal). Lexical errors are reported with file, line, and column.
-
-The lexer is the only phase that consults the raw text. After this point, downstream phases operate on tokens or AST nodes.
-
-### 5.2 Phase 2 — Parser
-
-**Input**: the token stream produced by the lexer.
-
-**Output**: an abstract syntax tree (AST) for each input file. The AST nodes correspond directly to the non-terminals in §2: `ClassDecl`, `AbstractClassDecl`, `InterfaceDecl`, `MainDecl`, `FieldsBlock`, `FieldDecl`, `Skill`, `SkillSignature`, `ParamList`, `Param`, `Instruction`, `ParallelBlock`, `PipeBlock`, `CallExpression`, `ThisCall`, `BaseCall`, `CrossCall`, `ArgList`, `NamedArg`, `Literal`.
-
-**Responsibilities**:
-
-- Build one AST per source file, applying the productions in §2 exactly.
-- A `.ax` file's root node MUST be one of `ClassDecl`, `AbstractClassDecl`, or `InterfaceDecl`. Anything else (including two declarations in one file) is a parse error.
-- A `.axm` file's root node MUST be a `MainDecl`. A class declaration or interface declaration inside a `.axm` file is a parse error.
-- Inside each `Skill` body, parse the sequence of `Instruction`s and `ThreadingBlock`s. For each `Instruction`, store the `OpaqueLine` text unchanged.
-- Within a `Skill`, the parser MUST distinguish `abstract` skills (no body, no braces) from non-abstract skills (with a `{ ... }` body). A non-abstract skill that omits its body, or an abstract skill that includes one, is a parse error.
-- A `Skill` whose `OverrideMode` is `abstract` MUST appear inside an `AbstractClassDecl`. If the parser detects an `abstract` skill inside a concrete `ClassDecl`, it MAY defer this check to the validator (it is structurally a parse-shaped error but is reported as part of the validator's override-mode checks, see §4 SR-10).
-- Parser errors include all the conditions above plus: unexpected tokens, mismatched braces, missing required terminals, and use of reserved keywords as identifiers.
-
-The parser is the last phase that sees individual files in isolation. Phases 3–5 operate on the union of all parsed files.
-
-### 5.3 Phase 3 — Resolver
-
-**Input**: the set of ASTs produced by the parser for every `.ax` and `.axm` file in the project.
-
-**Output**: an annotated AST in which:
-
-1. Every `ClassDecl`'s `extends` and `implements` clauses have been resolved to actual `ClassDecl` and `InterfaceDecl` nodes elsewhere in the project (or marked as unknown).
-2. Every `ThisCall`, `BaseCall`, and `CrossCall` inside an `OpaqueLine` has been associated with a target `Skill` or `Field` node (or marked as unknown).
-3. Every `DottedReference` in argument-value position has been classified as a `@public` field read (or marked as unknown).
-4. Every `Skill` that overrides an inherited skill is annotated with the parent `Skill` it overrides.
-
-**Responsibilities**:
-
-- Build the class graph: a single map from class name to `ClassDecl`/`InterfaceDecl`, plus the inheritance and interface-implementation relations. Reject if two declarations share a name (the validator will report this as error E9).
-- For each `Skill` and `MainSkill` body, scan every `Instruction`'s `OpaqueLine` text for a `call ` prefix (literal "call" followed by one space). If found, parse the remainder as a `CallExpression` and resolve the target:
-  - `this.member` — look up `member` in the owning class's skill list and field list, then walk the `extends` chain depth-first if not found locally.
-  - `base.member` — look up `member` in the owning class's parent class (and its ancestors, depth-first).
-  - `ClassName.skill_name` — look up `ClassName` in the project, then `skill_name` in that class's skills.
-- For each `NamedArg`'s `ArgumentValue`, if the value is a `DottedReference`, look up the target field and require that it is `@public`.
-- An unresolved reference does not stop the resolver; it annotates the AST node with an "unknown" status and leaves the validator to report it as error E6 (Unknown reference).
-- The resolver MUST also detect inheritance cycles. While walking each class's `extends` chain, mark visited classes. If the walk revisits a class, record a cycle (validator will report E7).
-- The resolver does NOT analyze the free-speech text of an `Instruction` beyond the `call ` prefix. It treats unrecognized `OpaqueLine` content as pure prose and ignores it.
-
-After resolution, each AST node carries enough information for the validator to make local accept/reject decisions without further re-traversal of the class graph.
-
-### 5.4 Phase 4 — Validator
-
-**Input**: the annotated AST produced by the resolver.
-
-**Output**: a (possibly empty) list of compiler errors. If the list is non-empty, the emitter MUST NOT run.
-
-**Responsibilities**:
-
-The validator enforces every semantic rule documented in §4. The complete list is the union of the catalog in §6 — i.e., every one of E1–E10 is detected here:
-
-| Error | Detected by validator check |
-|---|---|
-| E1 Unimplemented abstract skill | For each concrete `ClassDecl`, walk its ancestor chain; collect every abstract `Skill`; confirm the concrete class declares a non-abstract skill with the same name. |
-| E2 Interface contract violation | For each `ClassDecl` implementing one or more interfaces, for each interface's `SkillSignature`, confirm the class provides a matching `@public` skill (same name, same parameter set). |
-| E3 Invalid `base.*` reference | For each `BaseCall`, confirm the owning class has a parent AND the referenced member is reachable in the ancestor chain. |
-| E4 Visibility violation | For each resolved call site, confirm the target's visibility permits the caller (per SR-1 in §4). |
-| E5 Sealed skill override | For each `Skill` whose name matches an ancestor `Skill` declared `sealed`, reject. |
-| E6 Unknown reference | For each AST node the resolver marked "unknown," emit. |
-| E7 Cyclical inheritance | For each cycle the resolver detected, emit. |
-| E8 Override mode mismatch | For each child `Skill` whose declared `OverrideMode` is `abstract` or `virtual` while overriding a parent `Skill`, reject (the override mode is determined by the *declaring* class). |
-| E9 Duplicate class name | Reject if two `ClassDecl`/`InterfaceDecl` nodes share a name across the project. |
-| E10 Multiple `@main` skills | Reject if the project contains more than one `.axm` file, or if a single `.axm` file contains more than one `MainDecl`. |
-
-The validator MUST collect ALL errors before exiting. It MUST NOT stop after the first error. This guarantees that a developer fixing a project gets a complete error list per compile invocation.
-
-The validator's complete set of semantic rules is enumerated in §4 (SR-1 through SR-21). Each rule references the FR it satisfies and the error catalog entry that fires on rule violation.
-
-### 5.5 Phase 5 — Emitter
-
-**Input**: the annotated AST from the resolver, with the validator's error list confirmed empty.
-
-**Output**: the compiled bundle directory described in §7.
-
-**Responsibilities**:
-
-- Create the bundle root directory.
-- Create the `_fields/` subdirectory. For each `ClassDecl` with its own `FieldsBlock`, write `_fields/<ClassName>.fields` per the schema in §7.3.
-- Create the `_skills/` subdirectory. For each `Skill` that is **owned** by some class — owned meaning either originally declared there or declared as an override of a virtual/abstract parent — write `_skills/<ClassName>.<skill_name>.skill` per §7.4. Inherited-but-not-overridden skills get no separate file (§7.1.2).
-- If the project has a `MainDecl`, write `main.axc` per §7.5.
-- Write `_manifest.axc` per §7.6. The manifest MUST be the **last** file emitted because it references every other file by relative path.
-- Apply every byte-equivalence rule from §7.7: UTF-8 without BOM, LF-only line endings, exactly one trailing LF per file, two-space indentation, single space after `:`, lexicographic sorting where required, source-order preservation where required.
-
-If the emitter encounters an I/O error mid-emission (e.g., disk full), it SHOULD remove any partial files written and exit non-zero. The compiler MUST NOT leave a partial bundle on disk after any failure (FR-029).
-
-### 5.6 Error reporting
-
-Every error reported by the validator follows the format documented in §6 (FR-028): source file, line+column, human-readable message, suggested fix. The compiler MUST collect and emit every error before exiting (FR-029). The order of error emission is implementation-defined but SHOULD prefer the order of discovery (file-by-file, top-to-bottom within each file).
+No classical programming language is required. Claude is both the compiler and the runtime.
 
 ---
 
@@ -2631,55 +2541,49 @@ Allowing multiple skills with the same name and different parameter signatures w
 
 A future revision could introduce overloading by requiring that overloads differ in the number of *required* (non-defaulted) parameters, with the LLM dispatching by arity. This design has not been finalized.
 
-### 10.2 Positional arguments at call sites
-
-**Status**: not in v1.
-
-The v1 spec mandates named arguments at every call site (research R4). Positional forms could be added later if a clean precedence rule is defined. The likely v2 design admits positional arguments only when (a) every parameter of the called skill has a unique position in the declaration order, and (b) the call site uses positional arguments exclusively (no mixing positional and named in the same call).
-
-### 10.3 Cross-class field writes
+### 10.2 Cross-class field writes
 
 **Status**: not in v1.
 
 Writing `OtherClass.field = value` from outside the owning class is not permitted. State is mutated only by skills of the owning class (per the spec.md Assumptions). A future version may introduce a `@settable` field marker, a public-setter convention, or an explicit `mutates` declaration on skills.
 
-### 10.4 Field-level default expressions
+### 10.3 Field-level default expressions
 
 **Status**: not in v1.
 
-Defaults that reference other fields, other classes' values, or skill calls. v1 restricts defaults to literals (string, integer, boolean) per research R5. A future version may introduce a restricted expression grammar for defaults, but the design must answer: when is the default evaluated? At bundle-load time? At first reference? With what argument context?
+Defaults that reference other fields, other classes' values, or skill calls. v1 restricts defaults to simple constant values (quoted strings, numbers, booleans, unquoted words) per SR-5. A future version may introduce a restricted expression grammar for defaults, but the design must answer: when is the default evaluated? At bundle-load time? At first reference? With what argument context?
 
-### 10.5 Generic / parameterized classes
+### 10.4 Generic / parameterized classes
 
 **Status**: not in v1.
 
 `class Cache<T> { ... }` and the resulting type-parameter machinery. Out of scope for v1. The free-speech, untyped nature of Axon parameters means generics would have to be either purely documentary (the type parameter is just a name passed to the LLM) or backed by a real type system (which conflicts with FR-008).
 
-### 10.6 A `uses` / `import` declaration
+### 10.5 A `uses` / `import` declaration
 
 **Status**: deliberately omitted from v1.
 
 Composition is implicit and resolved project-wide (research R8, FR-010). A `uses` clause was rejected to keep the surface minimal and to match the brief's examples, none of which declare imports. May be revisited if large projects suffer from name collisions or if the implicit resolution rule starts producing surprising behavior in deeply nested project layouts.
 
-### 10.7 Multi-file `@main`
+### 10.6 Multi-file `@main`
 
 **Status**: not in v1.
 
 Currently one `.axm` per project. A future version could allow multiple entry points selected by a CLI argument at compile time. The bundle format would need to extend `_manifest.axc` to enumerate the available entry points.
 
-### 10.8 Runtime error taxonomy
+### 10.7 Runtime error taxonomy
 
 **Status**: not in v1.
 
 v1 leaves runtime errors to be surfaced by the LLM in plain natural language (§8.9). A future version may define structured runtime error categories (`ResolutionFailure`, `ParameterTypeMismatch`, `InfiniteRecursion`, etc.) and require the runtime to tag each failure with a category. This is not done in v1 because the LLM's natural-language error reports are already legible, and over-structuring them risks losing diagnostic detail.
 
-### 10.9 Standard library
+### 10.8 Standard library
 
 **Status**: not in v1.
 
 There is no built-in library of classes (e.g., `FileExporter`, `EmailSender` are user-defined in the §9 examples, not language-provided). A future version may ship a small standard library covering common LLM agent tasks: file I/O, web fetch, email send, structured data extraction. The library's interface would need to be defined in Axon and shipped with every compiler distribution.
 
-### 10.10 Nested threading blocks
+### 10.9 Nested threading blocks
 
 **Status**: not in v1.
 
