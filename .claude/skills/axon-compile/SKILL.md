@@ -42,6 +42,7 @@ the `.ax` and `.axm` source files to compile.
 - ALWAYS collect ALL errors before reporting — never stop at the first one
 - ALWAYS write `AxonProject.manifest.md` last
 - ALWAYS replace `call ClassName.skill_name(...)` with `/classname-skillname` in emitted SKILL.md files
+- ENRICH each non-call instruction bullet with 1–4 specific sub-bullets (see Step 7a) — enrichment is distinct from validation; SR-3 applies only to validation
 - This skill is fully self-contained — do NOT look for external spec files
 
 ---
@@ -441,6 +442,7 @@ Example: `api_key:@private:default|report:@protected:none`
 4. Compare computed fingerprint to stored fingerprint:
    - **Same** → skip writing, increment `unchanged`
    - **Different or file absent** → write the file (full content), increment `created` or `updated`
+   - Enriched sub-bullets are generated from source text; they do NOT affect the fingerprint — the fingerprint is always computed from the original parsed source
 
 ### 6. Emit shared fields files
 
@@ -468,6 +470,23 @@ Example: `api_key:@private:default|report:@protected:none`
 ### 7. Emit skill files
 
 - Create `.claude/skills/` if it does not exist
+
+### 7a. Instruction enrichment
+
+Before writing each skill file, enrich every non-call instruction bullet by generating 1–4 specific sub-bullets that answer one or more of:
+- **Which tool / library / API** — e.g. "Use Python's `reportlab` library (pip install reportlab arabic-reshaper python-bidi)"
+- **What input format to expect** — e.g. "Expect a JSON object with a top-level `questions` array; each item has `text` (string), `options` (string[]), `answer` (0-based index)"
+- **What output format / structure to produce** — e.g. "Produce a 3-section PDF: questions pages, answer-chart page, solutions page"
+- **Encoding / locale / direction** — e.g. "Configure RTL base direction using python-bidi's `get_display()`; reshape characters with arabic-reshaper before passing to reportlab"
+- **Validation / error handling** — e.g. "If the file is missing or unreadable, print a clear error and exit before generating any output"
+
+Rules for enrichment:
+- Preserve the original bullet verbatim as the parent bullet; sub-bullets are indented children
+- Only add sub-bullets that add meaningful precision — skip if the original is already concrete (e.g. "call json.load()")
+- Do NOT alter the semantic meaning of the original instruction
+- Call instructions (converted to `/classname-skillname`) receive NO enrichment — they are already precise
+
+Use the skill's class name, skill name, parameters, and full instruction list as context when deciding what sub-bullets to generate.
 
 **For each `@public` or `@protected` skill owned by a declaring class:**
 
@@ -514,9 +533,15 @@ Bind $ARGUMENTS to parameters in declaration order, or by name if named form is 
 
 ## Instructions
 
+(non-call bullets — each followed by enrichment sub-bullets)
 - instruction bullet exactly as written in source
-- call instructions written as /classname-skillname with their arguments
-- all other instruction bullets preserved verbatim
+  - [specific tool / library / method to use]
+  - [expected input format and validation]
+  - [expected output format or side-effect]
+  - [error handling or edge case — only if relevant]
+
+(call bullets — no enrichment)
+- /classname-skillname (arguments)
 
 ## Calls
 - /classname-otherskill
