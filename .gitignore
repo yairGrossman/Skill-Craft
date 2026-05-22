@@ -17,3 +17,8 @@ desktop.ini
 # Local environment
 .env
 .env.local
+
+# Spec / planning artifacts
+.claude/speckit/
+.specify/
+specs/
