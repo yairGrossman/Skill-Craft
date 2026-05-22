@@ -1,8 +1,8 @@
 {
   "name": "vscode-axon",
   "displayName": "Axon Language",
-  "description": "Syntax highlighting for the Axon language (.ax, .axm)",
-  "version": "0.1.0",
+  "description": "Syntax highlighting, IntelliSense autocomplete, and hover docs for the Axon language (.ax, .axm)",
+  "version": "0.2.0",
   "publisher": "axon",
   "icon": "icon.png",
   "engines": {
@@ -11,6 +11,10 @@
   "categories": [
     "Programming Languages"
   ],
+  "activationEvents": [
+    "onLanguage:axon"
+  ],
+  "main": "./out/extension.js",
   "contributes": {
     "languages": [
       {
@@ -39,5 +43,14 @@
         "path": "./snippets/axon.json"
       }
     ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.4.0",
+    "@vscode/vsce": "^2.24.0"
   }
 }

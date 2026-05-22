@@ -22,13 +22,13 @@ echo "    Skill -> $SKILL_DIR"
 if command -v code &>/dev/null; then
     VSIX_TEMP="$(mktemp).vsix"
     echo "    Fetching VS Code extension..."
-    curl -fsSL "$RAW/vscode-axon/vscode-axon-0.1.0.vsix" -o "$VSIX_TEMP"
+    curl -fsSL "$RAW/vscode-axon/vscode-axon-0.2.0.vsix" -o "$VSIX_TEMP"
     code --install-extension "$VSIX_TEMP" >/dev/null
     rm -f "$VSIX_TEMP"
     echo "    VS Code extension installed"
 else
     echo "    WARNING: 'code' not in PATH. Install VS Code shell command, then run:"
-    echo "    code --install-extension $RAW/vscode-axon/vscode-axon-0.1.0.vsix"
+    echo "    code --install-extension $RAW/vscode-axon/vscode-axon-0.2.0.vsix"
 fi
 
 # ── 3. Example project in ./axon/ ────────────────────────────────────────────

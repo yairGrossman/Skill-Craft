@@ -22,3 +22,7 @@ desktop.ini
 .claude/skills/speckit-*/
 .specify/
 specs/
+
+# VS Code extension build artifacts
+vscode-axon/node_modules/
+vscode-axon/out/

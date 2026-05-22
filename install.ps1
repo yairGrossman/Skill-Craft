@@ -22,14 +22,14 @@ Write-Host "    Skill -> $skillDir" -ForegroundColor Green
 if (Get-Command code -ErrorAction SilentlyContinue) {
     $vsixTemp = Join-Path $env:TEMP "vscode-axon.vsix"
     Write-Host "    Fetching VS Code extension..."
-    Invoke-WebRequest "$RAW/vscode-axon/vscode-axon-0.1.0.vsix" `
+    Invoke-WebRequest "$RAW/vscode-axon/vscode-axon-0.2.0.vsix" `
         -OutFile $vsixTemp -UseBasicParsing
     code --install-extension $vsixTemp | Out-Null
     Remove-Item $vsixTemp -Force
     Write-Host "    VS Code extension installed" -ForegroundColor Green
 } else {
     Write-Warning "    'code' not in PATH. Install VS Code shell command, then run:"
-    Write-Warning "    code --install-extension $RAW/vscode-axon/vscode-axon-0.1.0.vsix"
+    Write-Warning "    code --install-extension $RAW/vscode-axon/vscode-axon-0.2.0.vsix"
 }
 
 # ── 3. Example project in ./axon/ ────────────────────────────────────────────
