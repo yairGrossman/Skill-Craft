@@ -125,18 +125,20 @@ The compiler enforces these rules at every call site. Violations are caught at c
 .axm  →  the optional entry point (at most one per project)
 ```
 
-To compile a project, give Claude the Axon compiler skill and your source directory. Claude reads the skill, parses your `.ax` and `.axm` files, validates all structural rules, and emits a **bundle directory** you hand back to Claude to execute:
+To compile a project, run `/axon-compile <source_directory>` in Claude Code. Claude parses your `.ax` and `.axm` files, validates all structural rules, and writes the compiled output directly into Claude Code's skills infrastructure:
 
 ```
-my-project-compiled/
-├── _manifest.axc
-├── _fields/
-│   └── Greeter.fields
-├── _skills/
-│   ├── Greeter.greet.skill
-│   └── Greeter.recall.skill
-└── main.axc
+.claude/
+├── skills/
+│   ├── greeter-greet/SKILL.md
+│   ├── greeter-recall/SKILL.md
+│   └── main/SKILL.md
+└── shared/
+    ├── Greeter/fields.md
+    └── AxonProject.manifest.md
 ```
+
+Each compiled skill becomes an invokable Claude Code command — `/greeter-greet`, `/greeter-recall`, `/main`, etc.
 
 ---
 
@@ -174,7 +176,7 @@ skill main {
 }
 ```
 
-Compile it, hand the bundle to Claude, and Claude will greet "Yair" and then recall the greeting. No raw prompts. No copy-pasting. No duplication.
+Run `/axon-compile` on this directory, then run `/main` in Claude Code. Claude will greet "Yair" and recall the greeting. No raw prompts. No copy-pasting. No duplication.
 
 ---
 
@@ -317,29 +319,33 @@ Every error includes the source file, line and column, a human-readable message,
 
 ## The Output Bundle
 
-The bundle is what Claude reads. It is a directory, not a single file, and it is **DRY by design** — no content appears in more than one place.
+The compiled output lives directly inside Claude Code's skills infrastructure and is **DRY by design** — no content appears in more than one place.
 
 ```
-compiled/
-├── _manifest.axc           ← read first; lists every class, interface, and the entry point
-├── main.axc                ← present only when an .axm entry point was provided
-├── _fields/
-│   └── ClassName.fields    ← one file per class that declares fields
-└── _skills/
-    └── ClassName.skill_name.skill  ← one file per skill
+.claude/
+├── skills/
+│   ├── classname-skillname/SKILL.md   ← one folder per @public / @protected skill
+│   └── main/SKILL.md                  ← present only when an .axm entry point was provided
+└── shared/
+    ├── ClassName/fields.md            ← one file per class that declares fields
+    └── AxonProject.manifest.md        ← class graph, inheritance, interfaces, entry point
 ```
 
-Each `.skill` file contains a metadata block (class, visibility, override mode, parameters, paths to inherited fields, list of dependencies) followed by the natural-language body. Skills reference other skills and fields **by path** — never by embedding their content.
+**Naming convention**: `ClassName.skill_name` is lowercased and hyphenated — `Greeter.greet` → `greeter-greet`, `ResearchCompany.write_report` → `researchcompany-writereport`.
 
-The `_manifest.axc` is the map. Claude reads it first to understand the class graph, then resolves any reference from there.
+Each `SKILL.md` contains a metadata block (class, visibility, override mode, parameters, path to fields, list of dependencies) followed by the natural-language body. Skills reference other skills and fields **by path** — never by embedding their content.
+
+Each compiled skill is immediately invokable in Claude Code as a slash command: `/greeter-greet`, `/researchcompany-research`, `/main`, etc.
+
+**Incremental compilation**: the compiler fingerprints every emitted file. Re-running `/axon-compile` only rewrites files whose source changed and reports a `created / updated / unchanged / deleted` summary.
 
 ---
 
 ## How Claude Executes a Bundle
 
-1. **Load the manifest** — `_manifest.axc` gives Claude the complete picture: every class, its parent, its interfaces, its skill list, and the entry point.
-2. **Find the entry point** — if `main.axc` exists, begin there. Otherwise the bundle is a library and Claude awaits a call.
-3. **Execute skills** — for each skill call, Claude reads the `.skill` file, loads the referenced fields, and follows the natural-language instructions.
+1. **Load the manifest** — `.claude/shared/AxonProject.manifest.md` gives Claude the complete picture: every class, its parent, its interfaces, its skill list, and the entry point.
+2. **Find the entry point** — if `.claude/skills/main/SKILL.md` exists, begin there. Otherwise the bundle is a library and Claude awaits a call.
+3. **Execute skills** — for each skill call, Claude reads the corresponding `SKILL.md` in `.claude/skills/`, loads the referenced fields from `.claude/shared/`, and follows the natural-language instructions.
 4. **Resolve `this.*` and `base.*`** — using the inheritance chain recorded in the manifest.
 5. **Honor visibility** — Claude refuses to execute a `@private` skill called from outside its class.
 6. **Run `parallel` and `pipe` blocks** — `parallel` launches concurrent agents with no shared state; `pipe(strategy: per_item)` streams items; `pipe(strategy: on_complete)` waits for the producer to finish.
@@ -352,15 +358,12 @@ Claude is both the compiler and the runtime. The division of labor is intentiona
 ## Project Structure
 
 ```
-docs/
-└── axon/
+docs/axon/
     ├── spec.md                        ← canonical Axon language specification
-    ├── examples/
-    │   ├── small/                     ← Greeter hello-world
-    │   ├── medium/                    ← Research + ResearchCompany + interface
-    │   └── complex/                   ← multi-agent orchestration with threading
-    └── examples-compiled/
-        └── medium/                    ← full byte-faithful compiled bundle (DRY demo)
+    └── examples/
+        ├── small/                     ← Greeter hello-world
+        ├── medium/                    ← Research + ResearchCompany + interface
+        └── complex/                   ← multi-agent orchestration with threading
 
 specs/001-axon-language/               ← specification authoring artifacts
     ├── spec.md                        ← feature requirements
@@ -372,6 +375,10 @@ specs/001-axon-language/               ← specification authoring artifacts
         ├── grammar.ebnf               ← formal EBNF grammar
         ├── bundle-format.md           ← file schemas for the compiled bundle
         └── error-catalog.md          ← all 10 compiler errors with examples
+
+.claude/
+    ├── skills/axon-compile/SKILL.md   ← the Axon compiler skill
+    └── shared/AxonProject.manifest.md ← written by the compiler after first run
 ```
 
 The canonical language specification lives at [docs/axon/spec.md](docs/axon/spec.md). It is the contract a future compiler implementation is built from — precise enough that two independent engineers should produce byte-equivalent bundles for the same input.
