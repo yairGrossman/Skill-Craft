@@ -34,12 +34,12 @@ One command installs everything you need to develop in Skill Craft:
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/yairGrossman/Skill Craft/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/yairGrossman/Skill-Craft/main/install.ps1 | iex
 ```
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yairGrossman/Skill Craft/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yairGrossman/Skill-Craft/main/install.sh | bash
 ```
 
 Run from inside any project folder. After installation, open the `Skill Craft/` folder in Claude Code and run `/skillcraft-compile` to compile the example.
