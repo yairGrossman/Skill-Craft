@@ -1,48 +1,48 @@
 #!/usr/bin/env bash
-# Axon installer for macOS / Linux
+# Skill Craft installer for macOS / Linux
 # Run from inside your project folder:
-#   curl -fsSL https://raw.githubusercontent.com/yairGrossman/Axon/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/yairGrossman/Skill Craft/main/install.sh | bash
 
 set -e
 
-RAW="https://raw.githubusercontent.com/yairGrossman/Axon/main"
+RAW="https://raw.githubusercontent.com/yairGrossman/Skill Craft/main"
 
 PROJECT_DIR="$(pwd)"
 
-echo "==> Installing Axon developer tools"
+echo "==> Installing Skill Craft developer tools"
 
-# ── 1. axon-compile skill ────────────────────────────────────────────────────
-SKILL_DIR="$PROJECT_DIR/.claude/skills/axon-compile"
+# ── 1. skillcraft-compile skill ────────────────────────────────────────────────────
+SKILL_DIR="$PROJECT_DIR/.claude/skills/skillcraft-compile"
 mkdir -p "$SKILL_DIR"
-echo "    Fetching axon-compile skill..."
-curl -fsSL "$RAW/.claude/skills/axon-compile/SKILL.md" -o "$SKILL_DIR/SKILL.md"
+echo "    Fetching skillcraft-compile skill..."
+curl -fsSL "$RAW/.claude/skills/skillcraft-compile/SKILL.md" -o "$SKILL_DIR/SKILL.md"
 echo "    Skill -> $SKILL_DIR"
 
 # ── 2. VS Code extension ─────────────────────────────────────────────────────
 if command -v code &>/dev/null; then
     VSIX_TEMP="$(mktemp).vsix"
     echo "    Fetching VS Code extension..."
-    curl -fsSL "$RAW/vscode-axon/vscode-axon-0.2.0.vsix" -o "$VSIX_TEMP"
+    curl -fsSL "$RAW/vscode-skillcraft/vscode-skillcraft-0.2.0.vsix" -o "$VSIX_TEMP"
     code --install-extension "$VSIX_TEMP" >/dev/null
     rm -f "$VSIX_TEMP"
     echo "    VS Code extension installed"
 else
     echo "    WARNING: 'code' not in PATH. Install VS Code shell command, then run:"
-    echo "    code --install-extension $RAW/vscode-axon/vscode-axon-0.2.0.vsix"
+    echo "    code --install-extension $RAW/vscode-skillcraft/vscode-skillcraft-0.2.0.vsix"
 fi
 
-# ── 3. Example project in ./axon/ ────────────────────────────────────────────
-AXON_DIR="$(pwd)/axon/examples"
-mkdir -p "$AXON_DIR"
-echo "    Writing example project -> $AXON_DIR"
+# ── 3. Example project in ./Skill Craft/ ────────────────────────────────────────────
+SKILLCRAFT_DIR="$(pwd)/skillcraft/examples"
+mkdir -p "$SKILLCRAFT_DIR"
+echo "    Writing example project -> $SKILLCRAFT_DIR"
 
-cat > "$AXON_DIR/reportable.ax" << 'EOF'
+cat > "$SKILLCRAFT_DIR/reportable.skillc" << 'EOF'
 interface Reportable {
   skill generate(topic)
 }
 EOF
 
-cat > "$AXON_DIR/reporter.ax" << 'EOF'
+cat > "$SKILLCRAFT_DIR/reporter.skillc" << 'EOF'
 abstract class Reporter implements Reportable {
 
   fields {
@@ -72,7 +72,7 @@ abstract class Reporter implements Reportable {
 }
 EOF
 
-cat > "$AXON_DIR/news_reporter.ax" << 'EOF'
+cat > "$SKILLCRAFT_DIR/news_reporter.skillc" << 'EOF'
 class NewsReporter extends Reporter {
 
   fields {
@@ -93,7 +93,7 @@ class NewsReporter extends Reporter {
 }
 EOF
 
-cat > "$AXON_DIR/main.axm" << 'EOF'
+cat > "$SKILLCRAFT_DIR/main.skillcm" << 'EOF'
 @main
 skill main {
   - call NewsReporter.generate(topic: "AI trends")
@@ -112,4 +112,4 @@ EOF
 
 echo "    Example project written (4 files)"
 echo ""
-echo "Done. Open axon/examples/ in Claude Code and run /axon-compile to compile."
+echo "Done. Open skillcraft/examples/ in Claude Code and run /skillcraft-compile to compile."

@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "Axon",
-  "scopeName": "source.axon",
-  "fileTypes": ["ax", "axm"],
+  "name": "Skill Craft",
+  "scopeName": "source.skillcraft",
+  "fileTypes": ["skillc", "skillcm"],
   "patterns": [
     { "include": "#strings" },
     { "include": "#decorators" },
@@ -22,18 +22,18 @@
   ],
   "repository": {
     "strings": {
-      "name": "string.quoted.double.axon",
+      "name": "string.quoted.double.skillcraft",
       "begin": "\"",
       "end": "\"",
       "patterns": [
         {
-          "name": "constant.character.escape.axon",
+          "name": "constant.character.escape.skillcraft",
           "match": "\\\\[\"\\\\]"
         }
       ]
     },
     "decorators": {
-      "name": "storage.modifier.axon",
+      "name": "storage.modifier.skillcraft",
       "match": "@(public|protected|private|main)\\b"
     },
     "call-instruction": {
@@ -41,17 +41,17 @@
         {
           "match": "\\b(call)\\s+(this|base)\\.([A-Za-z][A-Za-z0-9_]*)",
           "captures": {
-            "1": { "name": "keyword.other.call.axon" },
-            "2": { "name": "variable.language.axon" },
-            "3": { "name": "entity.name.function.axon" }
+            "1": { "name": "keyword.other.call.skillcraft" },
+            "2": { "name": "variable.language.skillcraft" },
+            "3": { "name": "entity.name.function.skillcraft" }
           }
         },
         {
           "match": "\\b(call)\\s+([A-Za-z][A-Za-z0-9_]*)\\.([A-Za-z][A-Za-z0-9_]*)",
           "captures": {
-            "1": { "name": "keyword.other.call.axon" },
-            "2": { "name": "entity.name.class.axon" },
-            "3": { "name": "entity.name.function.axon" }
+            "1": { "name": "keyword.other.call.skillcraft" },
+            "2": { "name": "entity.name.class.skillcraft" },
+            "3": { "name": "entity.name.function.skillcraft" }
           }
         }
       ]
@@ -59,33 +59,33 @@
     "class-declaration": {
       "match": "\\b(abstract\\s+class|class)\\s+([A-Za-z][A-Za-z0-9_]*)",
       "captures": {
-        "1": { "name": "keyword.declaration.axon" },
-        "2": { "name": "entity.name.class.axon" }
+        "1": { "name": "keyword.declaration.skillcraft" },
+        "2": { "name": "entity.name.class.skillcraft" }
       }
     },
     "interface-declaration": {
       "match": "\\b(interface)\\s+([A-Za-z][A-Za-z0-9_]*)",
       "captures": {
-        "1": { "name": "keyword.declaration.axon" },
-        "2": { "name": "entity.name.class.axon" }
+        "1": { "name": "keyword.declaration.skillcraft" },
+        "2": { "name": "entity.name.class.skillcraft" }
       }
     },
     "extends-clause": {
       "match": "\\b(extends)\\s+([A-Za-z][A-Za-z0-9_]*)",
       "captures": {
-        "1": { "name": "keyword.declaration.axon" },
-        "2": { "name": "entity.name.class.axon" }
+        "1": { "name": "keyword.declaration.skillcraft" },
+        "2": { "name": "entity.name.class.skillcraft" }
       }
     },
     "implements-clause": {
       "begin": "\\b(implements)\\b",
       "end": "(?=[{])|$",
       "beginCaptures": {
-        "1": { "name": "keyword.declaration.axon" }
+        "1": { "name": "keyword.declaration.skillcraft" }
       },
       "patterns": [
         {
-          "name": "entity.name.class.axon",
+          "name": "entity.name.class.skillcraft",
           "match": "\\b[A-Za-z][A-Za-z0-9_]*\\b"
         }
       ]
@@ -93,20 +93,20 @@
     "skill-declaration": {
       "match": "\\b(skill)\\s+([A-Za-z][A-Za-z0-9_]*)",
       "captures": {
-        "1": { "name": "string.unquoted.skill.axon" },
-        "2": { "name": "entity.name.function.axon" }
+        "1": { "name": "string.unquoted.skill.skillcraft" },
+        "2": { "name": "entity.name.function.skillcraft" }
       }
     },
     "concurrent-blocks": {
-      "name": "keyword.control.concurrent.axon",
+      "name": "keyword.control.concurrent.skillcraft",
       "match": "\\b(parallel|pipe)\\b"
     },
     "strategy-keywords": {
-      "name": "keyword.other.strategy.axon",
+      "name": "keyword.other.strategy.skillcraft",
       "match": "\\b(strategy|per_item|on_complete)\\b"
     },
     "override-modes": {
-      "name": "storage.modifier.override.axon",
+      "name": "storage.modifier.override.skillcraft",
       "match": "\\b(abstract|virtual|sealed)\\b"
     },
     "language-variables": {
@@ -114,28 +114,28 @@
         {
           "match": "\\b(this|base)\\.([A-Za-z][A-Za-z0-9_]*)",
           "captures": {
-            "1": { "name": "variable.language.axon" },
-            "2": { "name": "variable.other.member.axon" }
+            "1": { "name": "variable.language.skillcraft" },
+            "2": { "name": "variable.other.member.skillcraft" }
           }
         },
         {
-          "name": "variable.language.axon",
+          "name": "variable.language.skillcraft",
           "match": "\\b(this|base)\\b"
         }
       ]
     },
     "declaration-keywords": {
-      "name": "keyword.declaration.axon",
+      "name": "keyword.declaration.skillcraft",
       "match": "\\b(fields)\\b"
     },
     "constants": {
       "patterns": [
         {
-          "name": "constant.language.boolean.axon",
+          "name": "constant.language.boolean.skillcraft",
           "match": "\\b(true|false)\\b"
         },
         {
-          "name": "constant.numeric.axon",
+          "name": "constant.numeric.skillcraft",
           "match": "\\b\\d+\\b"
         }
       ]
@@ -144,12 +144,12 @@
       "begin": "^(\\s*)(-)(?= )",
       "end": "$",
       "beginCaptures": {
-        "2": { "name": "entity.name.type.axon" }
+        "2": { "name": "entity.name.type.skillcraft" }
       },
       "patterns": [
         {
           "match": "`([^`]+)`",
-          "name": "variable.parameter.axon"
+          "name": "variable.parameter.skillcraft"
         },
         { "include": "#call-instruction" },
         { "include": "#language-variables" },

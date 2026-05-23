@@ -1,5 +1,5 @@
-<!-- SPECKIT START -->
+﻿<!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan at
-[specs/001-axon-language/plan.md](specs/001-axon-language/plan.md).
+[specs/001-skillcraft-language/plan.md](specs/001-skillcraft-language/plan.md).
 <!-- SPECKIT END -->

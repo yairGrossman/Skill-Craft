@@ -1,9 +1,9 @@
 {
-  "name": "vscode-axon",
-  "displayName": "Axon Language",
-  "description": "Syntax highlighting, IntelliSense autocomplete, and hover docs for the Axon language (.ax, .axm)",
+  "name": "vscode-skillcraft",
+  "displayName": "Skill Craft Language",
+  "description": "Syntax highlighting, IntelliSense autocomplete, and hover docs for the Skill Craft language (.skillc, .skillcm)",
   "version": "0.2.0",
-  "publisher": "axon",
+  "publisher": "skillcraft",
   "icon": "icon.png",
   "engines": {
     "vscode": "^1.74.0"
@@ -12,35 +12,35 @@
     "Programming Languages"
   ],
   "activationEvents": [
-    "onLanguage:axon"
+    "onLanguage:skillcraft"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
       {
-        "id": "axon",
+        "id": "skillcraft",
         "aliases": [
-          "Axon",
-          "axon"
+          "Skill Craft",
+          "skillcraft"
         ],
         "extensions": [
-          ".ax",
-          ".axm"
+          ".skillc",
+          ".skillcm"
         ],
         "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
-        "language": "axon",
-        "scopeName": "source.axon",
-        "path": "./syntaxes/axon.tmLanguage.json"
+        "language": "skillcraft",
+        "scopeName": "source.skillcraft",
+        "path": "./syntaxes/skillcraft.tmLanguage.json"
       }
     ],
     "snippets": [
       {
-        "language": "axon",
-        "path": "./snippets/axon.json"
+        "language": "skillcraft",
+        "path": "./snippets/skillcraft.json"
       }
     ]
   },

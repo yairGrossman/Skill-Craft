@@ -1,10 +1,10 @@
-# The Axon Language Specification
+# The Skill Craft language Specification
 
 **Version**: v1 (draft)
 **Status**: Canonical reference
 **Last revised**: 2026-05-21
 
-Axon is an object-oriented programming language for orchestrating LLM agents. The Axon compiler is an Axon skill executed by Claude. There is no classical code to write. Claude reads the compiler skill, which instructs it precisely how to parse Axon source files, validate them, and emit a bundle. This document is the contract that the compiler skill and the runtime skill follow.
+Skill Craft is an object-oriented programming language for orchestrating LLM agents. the Skill Craft compiler is a Skill Craft skill executed by Claude. There is no classical code to write. Claude reads the compiler skill, which instructs it precisely how to parse Skill Craft source files, validate them, and emit a bundle. This document is the contract that the compiler skill and the runtime skill follow.
 
 The sections below follow the order required by FR-032 through FR-041 of the feature specification.
 
@@ -14,25 +14,25 @@ The sections below follow the order required by FR-032 through FR-041 of the fea
 
 ### 1.1 Vision
 
-Axon is an object-oriented programming language designed for one purpose: orchestrating LLM agents — concretely, Claude. It treats a prompt the way classical programming languages treat a function: as something with a name, parameters, a visibility, a place in a class hierarchy, and a documented contract with its callers. The "executable" produced by the Axon compiler is not machine code or bytecode; it is a directory of human-readable text files (a *bundle*) that a language model reads at runtime and acts on.
+Skill Craft is an object-oriented programming language designed for one purpose: orchestrating LLM agents — concretely, Claude. It treats a prompt the way classical programming languages treat a function: as something with a name, parameters, a visibility, a place in a class hierarchy, and a documented contract with its callers. The "executable" produced by the Skill Craft compiler is not machine code or bytecode; it is a directory of human-readable text files (a *bundle*) that a language model reads at runtime and acts on.
 
-The motivating idea is that the discipline OOP imposes on classical code — encapsulation, abstraction, polymorphism, inheritance, contracts — is also valuable for prompt engineering. A modern LLM-driven application accumulates ad-hoc prompts the way an early-1990s application accumulated copy-pasted snippets: scattered across files, undocumented, hard to compose, impossible to test in isolation. Axon's claim is that the cure for that disorder is the same cure that worked for classical code: name things, give them types of responsibility, make them composable, and let a compiler enforce the basic structural invariants.
+The motivating idea is that the discipline OOP imposes on classical code — encapsulation, abstraction, polymorphism, inheritance, contracts — is also valuable for prompt engineering. A modern LLM-driven application accumulates ad-hoc prompts the way an early-1990s application accumulated copy-pasted snippets: scattered across files, undocumented, hard to compose, impossible to test in isolation. Skill Craft's claim is that the cure for that disorder is the same cure that worked for classical code: name things, give them types of responsibility, make them composable, and let a compiler enforce the basic structural invariants.
 
 ### 1.2 Philosophy
 
 Three design principles shape every decision in the rest of this document.
 
-1. **State lives in classes, not in instances.** Axon has no `new`, no constructors, no `this` in the Java/C# sense of "the instance currently executing the method." Every class is essentially a static namespace of behavior and shared memory. A class's `fields { }` block is the only mutable state it owns; every skill of that class sees the same fields. This matches how LLM agents actually behave — they are stateless callable functions whose only memory is whatever data has been threaded into their inputs — and removes a whole category of accidental complexity (object lifetimes, identity, equality, dependency injection) from the language.
+1. **State lives in classes, not in instances.** Skill Craft has no `new`, no constructors, no `this` in the Java/C# sense of "the instance currently executing the method." Every class is essentially a static namespace of behavior and shared memory. A class's `fields { }` block is the only mutable state it owns; every skill of that class sees the same fields. This matches how LLM agents actually behave — they are stateless callable functions whose only memory is whatever data has been threaded into their inputs — and removes a whole category of accidental complexity (object lifetimes, identity, equality, dependency injection) from the language.
 
-2. **Both the compiler and the runtime are Claude.** There is no classical compiler. The Axon compiler is an Axon skill that instructs Claude how to read `.ax` and `.axm` source files, validate structural rules (inheritance contracts, visibility, interface contracts, override modes), and emit the compiled bundle. The Axon runtime is a separate Axon skill that instructs Claude how to read a compiled bundle and execute its skills. Each instruction bullet inside a skill body remains opaque to both stages — the compiler validates structure and references, the runtime supplies meaning and executes behavior.
+2. **Both the compiler and the runtime are Claude.** There is no classical compiler. the Skill Craft compiler is a Skill Craft skill that instructs Claude how to read `.skillc` and `.skillcm` source files, validate structural rules (inheritance contracts, visibility, interface contracts, override modes), and emit the compiled bundle. the Skill Craft runtime is a separate Skill Craft skill that instructs Claude how to read a compiled bundle and execute its skills. Each instruction bullet inside a skill body remains opaque to both stages — the compiler validates structure and references, the runtime supplies meaning and executes behavior.
 
-3. **Logic is free speech.** Axon defines no `if`, no `else`, no `for`, no `while`, no `switch`, no `try/catch`, no arithmetic operators, no comparison operators. Conditionals, iteration, and exception handling are expressed as natural-language instruction bullets and interpreted by the LLM. The skill body `- if the topic mentions a public company, gather recent SEC filings; otherwise, fall back to news search` is not parsed for control flow. It is preserved verbatim and handed to Claude, which is fully capable of branching on natural-language criteria. This is Axon's most disorienting departure from classical languages, and it is deliberate. Trying to formalize natural language into a fixed vocabulary of control words would defeat the language's reason for existing.
+3. **Logic is free speech.** Skill Craft defines no `if`, no `else`, no `for`, no `while`, no `switch`, no `try/catch`, no arithmetic operators, no comparison operators. Conditionals, iteration, and exception handling are expressed as natural-language instruction bullets and interpreted by the LLM. The skill body `- if the topic mentions a public company, gather recent SEC filings; otherwise, fall back to news search` is not parsed for control flow. It is preserved verbatim and handed to Claude, which is fully capable of branching on natural-language criteria. This is Skill Craft's most disorienting departure from classical languages, and it is deliberate. Trying to formalize natural language into a fixed vocabulary of control words would defeat the language's reason for existing.
 
 ### 1.3 Comparison to traditional OOP
 
-Axon shares the surface vocabulary of mainstream OOP — `class`, `abstract class`, `interface`, `extends`, `implements`, `@public`, `@protected`, `@private`, `virtual`, `sealed` — but the underlying execution model is different in concrete ways:
+Skill Craft shares the surface vocabulary of mainstream OOP — `class`, `abstract class`, `interface`, `extends`, `implements`, `@public`, `@protected`, `@private`, `virtual`, `sealed` — but the underlying execution model is different in concrete ways:
 
-| Concept | Traditional OOP (Java/C#/C++) | Axon |
+| Concept | Traditional OOP (Java/C#/C++) | Skill Craft |
 |---|---|---|
 | Instantiation | `new T(args)`; objects have identity, lifetime, identity-based equality | None. A class is a static namespace. No `new`, no constructors, no destructors, no identity. |
 | State | Per-instance fields, possibly per-class static fields | Per-class shared fields only. Every skill of a class sees the same field block. |
@@ -40,7 +40,7 @@ Axon shares the surface vocabulary of mainstream OOP — `class`, `abstract clas
 | Logic | Statements + expressions + control flow keywords compiled to a deterministic machine | Free-speech instruction bullets interpreted by an LLM at runtime. |
 | Types | Static or gradual; checked by compiler | Untyped. The LLM infers parameter types from context. |
 | Exceptions | `throw` / `catch` / call-stack unwinding | None in v1. Runtime errors are surfaced by the LLM in natural language to the user. |
-| Composition | Import / using / module systems | Implicit, project-wide. Every `ClassName.skill_name(...)` reference resolves against the set of `.ax` files in the project; no `import` declaration is needed or allowed. |
+| Composition | Import / using / module systems | Implicit, project-wide. Every `ClassName.skill_name(...)` reference resolves against the set of `.skillc` files in the project; no `import` declaration is needed or allowed. |
 | Concurrency | Threads, async/await, futures, channels | Two language-level forms: `parallel { }` (fire-and-forget concurrent agents, no shared intermediate state) and `pipe(strategy: per_item | on_complete) { }` (producer/consumer). Both block forms are interpreted by the LLM runtime. |
 | Output | Machine code, bytecode, or transpiled source | A directory of human-readable text files. The runtime is an LLM, which means the executable must be legible to a model, not to a CPU. |
 
@@ -50,7 +50,7 @@ These constraints satisfy FR-032. The remaining sections of this document formal
 
 ## §2. Formal grammar
 
-The formal grammar below is the structural reference that the Axon compiler skill follows when reading source files. Claude uses this grammar to understand what constitutes a valid Axon program. It is expressed in EBNF for precision and human readability, not as input to a classical parser generator.
+The formal grammar below is the structural reference that the Skill Craft compiler skill follows when reading source files. Claude uses this grammar to understand what constitutes a valid Skill Craft program. It is expressed in EBNF for precision and human readability, not as input to a classical parser generator.
 
 ### 2.1 EBNF metasyntax (the conventions used below)
 
@@ -67,7 +67,7 @@ This grammar uses ISO/IEC 14977 EBNF. The conventions are:
 - A bracketed comment in the form `(* ... *)` is a grammar-author note, ignored by parsers.
 - A guarded prose phrase in the form `? ... ?` indicates a primitive predicate the lexer must implement (e.g., `? any character except " or \ ?`). It is not further decomposed in the grammar.
 
-Whitespace (spaces and tabs) between tokens is permitted and ignored except where explicitly forbidden — notably inside an `Instruction`, where the text between the `-` bullet and the end-of-line is consumed as an opaque line. Newlines are significant only for `Instruction` termination. Line comments and block comments are not supported in Axon v1; the compiler MUST NOT recognize any comment syntax.
+Whitespace (spaces and tabs) between tokens is permitted and ignored except where explicitly forbidden — notably inside an `Instruction`, where the text between the `-` bullet and the end-of-line is consumed as an opaque line. Newlines are significant only for `Instruction` termination. Line comments and block comments are not supported in Skill Craft v1; the compiler MUST NOT recognize any comment syntax.
 
 The grammar contains roughly 35 production rules organized into seven groups: top-level files, declarations, fields, skills, instructions, threading blocks, and lexical primitives.
 
@@ -216,8 +216,8 @@ Newline         = ? U+000A or U+000D U+000A ? ;
 
 ### 2.3 Notes on the grammar
 
-- An `.ax` file contains exactly one `AxFile` payload — one of `ClassDecl`, `AbstractClassDecl`, or `InterfaceDecl`. Multiple top-level declarations in one file are a parse error (see §4, SR-22).
-- An `.axm` file contains exactly one `AxmFile` payload — that is, exactly one `MainDecl`. Multiple `@main` skills in one file produce error E10 (§6).
+- An `.skillc` file contains exactly one `AxFile` payload — one of `ClassDecl`, `AbstractClassDecl`, or `InterfaceDecl`. Multiple top-level declarations in one file are a parse error (see §4, SR-22).
+- An `.skillcm` file contains exactly one `AxmFile` payload — that is, exactly one `MainDecl`. Multiple `@main` skills in one file produce error E10 (§6).
 - `OpaqueLine` is intentionally unbounded — the compiler skill reads it as a single line and does not re-tokenize its contents. The compiler skill scans the leading characters of each `OpaqueLine` to detect the `call ` prefix and parses the remainder as a `CallExpression` for cross-reference checking. This is the boundary between the compiler skill's structural responsibilities and the runtime skill's free-speech responsibilities (research R6, R7).
 - `DottedReference` is used only in argument-value position, not in instruction-text position. Inside `OpaqueLine` text, dotted identifiers are part of the opaque string and the compiler does not resolve them.
 - `UnquotedValue` is an LLM-interpreted rule — the compiler skill reads up to the next delimiter (`,` or `)`). This is why the LLM compiler is better suited than a classical parser: it handles the ambiguity of natural-language values by understanding intent rather than requiring strict tokenization.
@@ -230,7 +230,7 @@ This grammar satisfies FR-033 and is the production grammar against which the th
 
 ## §3. Syntax reference
 
-This section presents every Axon language construct with at least one complete worked example, per FR-034. The constructs are grouped functionally: declarations first, then members, then calls, then threading. Each construct's grammar reference points back to the production in §2 that defines it.
+This section presents every Skill Craft language construct with at least one complete worked example, per FR-034. The constructs are grouped functionally: declarations first, then members, then calls, then threading. Each construct's grammar reference points back to the production in §2 that defines it.
 
 ### 3.1 Class declaration
 
@@ -238,7 +238,7 @@ A concrete class is declared with the `class` keyword followed by an identifier 
 
 **Grammar reference**: `ClassDecl` (§2.2).
 
-```axon
+```Skill Craft
 class Greeter {
   // body
 }
@@ -246,7 +246,7 @@ class Greeter {
 
 A class with no body is legal:
 
-```axon
+```Skill Craft
 class Empty {}
 ```
 
@@ -256,7 +256,7 @@ Every class may declare at most one `fields { }` block, which contains zero or m
 
 **Grammar reference**: `FieldsBlock`, `FieldDecl` (§2.2).
 
-```axon
+```Skill Craft
 class Greeter {
 
   fields {
@@ -267,7 +267,7 @@ class Greeter {
 
 A class can declare multiple fields with mixed visibility and defaults:
 
-```axon
+```Skill Craft
 class Counter {
 
   fields {
@@ -288,7 +288,7 @@ A skill is the named, parameterized unit of LLM instruction. Every skill declara
 
 **Skill with parameters and instructions**:
 
-```axon
+```Skill Craft
 @public
 skill greet(name) {
   - greet name warmly
@@ -298,7 +298,7 @@ skill greet(name) {
 
 **Skill with no parameters and one instruction**:
 
-```axon
+```Skill Craft
 @public
 skill recall {
   - return this.last_greeting
@@ -307,14 +307,14 @@ skill recall {
 
 **Skill with no instructions** (legal — a no-op):
 
-```axon
+```Skill Craft
 @public
 skill noop {}
 ```
 
 **Parameter with a literal default**:
 
-```axon
+```Skill Craft
 @public
 skill generate_questions(topic, amount = 10) {
   - generate `amount` thoughtful questions about `topic`
@@ -325,17 +325,17 @@ The parameter `amount` defaults to the integer literal `10`. At the call site, `
 
 ### 3.4 Literal values (defaults and arguments)
 
-Axon does not enforce types on field defaults or argument values. Parameters and fields are untyped — the LLM infers meaning from context. A value like `Apple Inc`, `10`, `false`, or `critical thinking style` is valid in any position. The LLM compiler understands intent without requiring the developer to annotate types.
+Skill Craft does not enforce types on field defaults or argument values. Parameters and fields are untyped — the LLM infers meaning from context. A value like `Apple Inc`, `10`, `false`, or `critical thinking style` is valid in any position. The LLM compiler understands intent without requiring the developer to annotate types.
 
 For structured `call` expressions where the compiler needs to parse argument boundaries, the comma between arguments and the closing parenthesis serve as delimiters. Multi-word values in named arguments are delimited by the comma of the next argument or the closing parenthesis — quotes are not required:
 
-```axon
+```Skill Craft
 - call generate_questions(topic: Apple Inc, amount: 10, style: critical thinking)
 ```
 
 Quoted strings are also accepted for developers who prefer them:
 
-```axon
+```Skill Craft
 - call generate_questions(topic: "Apple Inc", amount: 10, style: "critical thinking")
 ```
 
@@ -355,7 +355,7 @@ Three visibility modifiers govern member access (FR-013, FR-014). They apply uni
 
 A skill declares its visibility on the line above the `skill` keyword:
 
-```axon
+```Skill Craft
 @public
 skill greet(name) { ... }
 
@@ -368,7 +368,7 @@ skill internal { ... }
 
 A field declares its visibility inline:
 
-```axon
+```Skill Craft
 fields {
   @public total = 0
   @protected step = 1
@@ -382,7 +382,7 @@ Inside a skill body, `this.member` refers to a field or skill of the owning clas
 
 **Grammar reference**: `ThisCall` (§2.2). Inside an opaque instruction line, `this.member` appears as part of the bullet text; the resolver recognizes the `call this.X` form for cross-reference checking (§5.3).
 
-```axon
+```Skill Craft
 @public
 skill greet(name) {
   - greet name warmly
@@ -396,7 +396,7 @@ skill compose {
 }
 ```
 
-A skill MAY refer to a `this.member` only if that member exists in the owning class (after inheritance lookup) and is visible from inside the class. A `this.private_field_of_some_other_class` is not legal — `this` always means "this class," not "this instance" (Axon has no instances).
+A skill MAY refer to a `this.member` only if that member exists in the owning class (after inheritance lookup) and is visible from inside the class. A `this.private_field_of_some_other_class` is not legal — `this` always means "this class," not "this instance" (Skill Craft has no instances).
 
 ### 3.7 Call instructions and cross-class calls
 
@@ -406,11 +406,11 @@ A call instruction is an instruction bullet whose text begins with the literal `
 - `base.skill_name(...)` — parent-class call (introduced in §3.x of the inheritance section, see US2).
 - `ClassName.skill_name(...)` — cross-class call.
 
-A cross-class call invokes a `@public` skill of another class in the project. No `import` / `uses` declaration is required; the compiler resolves `ClassName` against the project-wide set of `.ax` files (FR-010).
+A cross-class call invokes a `@public` skill of another class in the project. No `import` / `uses` declaration is required; the compiler resolves `ClassName` against the project-wide set of `.skillc` files (FR-010).
 
 **Grammar reference**: `CallExpression`, `CrossCall` (§2.2).
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call Greeter.greet(name: "Yair")
@@ -421,13 +421,13 @@ skill main {
 Arguments at call sites may be **named** or **positional** — the developer chooses whichever is more natural. Named and positional forms may not be mixed in the same call.
 
 **Named arguments** — provide the parameter name followed by a colon and the value. May be provided in any order. Defaulted parameters may be omitted:
-```axon
+```Skill Craft
 - call generate_questions(topic: Apple Inc, style: critical thinking)
 - call Greeter.greet(name: Yair)
 ```
 
 **Positional arguments** — provide values in parameter declaration order. Defaulted parameters at the end may be omitted:
-```axon
+```Skill Craft
 - call generate_questions(Apple Inc)
 - call Greeter.greet(Yair)
 ```
@@ -435,18 +435,18 @@ Arguments at call sites may be **named** or **positional** — the developer cho
 **Multi-word values** do not require quotes. The comma between arguments and the closing parenthesis act as natural delimiters. Quoted strings are accepted for developers who prefer them but are never required.
 
 **Zero-argument calls** omit parentheses:
-```axon
+```Skill Craft
 - call Greeter.recall
 - call this.validate_sources
 ```
 
-### 3.8 `@main` skill in `.axm` files
+### 3.8 `@main` skill in `.skillcm` files
 
-The entry point of an Axon project is an optional `@main skill main { }` block, declared in a single `.axm` file. The body of `main` is a list of instruction bullets that orchestrate calls to other skills.
+The entry point of a Skill Craft project is an optional `@main skill main { }` block, declared in a single `.skillcm` file. The body of `main` is a list of instruction bullets that orchestrate calls to other skills.
 
 **Grammar reference**: `MainDecl`, `AxmFile` (§2.2).
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call Greeter.greet(name: "Yair")
@@ -454,7 +454,7 @@ skill main {
 }
 ```
 
-The `@main` decorator is **only** legal at the top of an `.axm` file — using it inside an `.ax` file is error E10 / "Misplaced @main." A project MAY have zero `.axm` files (in which case the compiled bundle is a library — see FR-021); it MUST have at most one (FR-019).
+The `@main` decorator is **only** legal at the top of an `.skillcm` file — using it inside an `.skillc` file is error E10 / "Misplaced @main." A project MAY have zero `.skillcm` files (in which case the compiled bundle is a library — see FR-021); it MUST have at most one (FR-019).
 
 ### 3.9 `DottedReference` in argument-value position
 
@@ -468,7 +468,7 @@ A dotted reference's behavior is decided by the resolver:
 
 Example (from the complex example in §9):
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call ResearchCompany.research(topic: "Apple Inc")
@@ -484,7 +484,7 @@ An abstract class is declared with `abstract class` followed by an identifier an
 
 **Grammar reference**: `AbstractClassDecl` (§2.2).
 
-```axon
+```Skill Craft
 abstract class Research {
 
   fields {
@@ -522,7 +522,7 @@ An interface is declared with `interface` followed by an identifier and a brace-
 
 **Grammar reference**: `InterfaceDecl`, `SkillSignature` (§2.2).
 
-```axon
+```Skill Craft
 interface Researchable {
   @public skill research(topic)
 }
@@ -536,7 +536,7 @@ A class MAY extend at most one other class (single inheritance per FR-004). The 
 
 **Grammar reference**: `Extends` (§2.2).
 
-```axon
+```Skill Craft
 class ResearchCompany extends Research {
   // inherits Research's fields and non-private skills
 }
@@ -550,13 +550,13 @@ A class MAY implement zero or more interfaces. Interface names are comma-separat
 
 **Grammar reference**: `Implements` (§2.2).
 
-```axon
+```Skill Craft
 class ResearchCompany extends Research implements Researchable {
   // must provide a @public skill matching every Researchable signature
 }
 ```
 
-```axon
+```Skill Craft
 class Aggregator implements Researchable, Exportable {
   // must satisfy both interfaces
 }
@@ -570,7 +570,7 @@ Inside a skill body, `base.member` references a member of the parent class. The 
 
 **Grammar reference**: `BaseCall` (§2.2). Inside an opaque instruction line, the resolver recognizes the `call base.X` form for cross-reference checking (§5.3).
 
-```axon
+```Skill Craft
 class ResearchCompany extends Research implements Researchable {
   @protected
   skill write_report {
@@ -593,7 +593,7 @@ A skill's **override mode** controls how descendants may treat it:
 
 **Grammar reference**: `OverrideMode` (§2.2).
 
-```axon
+```Skill Craft
 abstract class A {
 
   @public
@@ -618,7 +618,7 @@ abstract class A {
 
 **A subtle constraint on override declarations**: when a child class overrides an inherited skill, the child's declaration MUST NOT specify an override-mode modifier — it cannot re-mark the skill `abstract` or `virtual` (SR-10 in §4). The override mode is determined by the *declaring (ancestor)* class. A child override is simply a non-modifier declaration with the same name:
 
-```axon
+```Skill Craft
 class B extends A {
   @public
   skill bar {                         // OVERRIDES A.bar — no modifier on the child
@@ -645,7 +645,7 @@ A `parallel { }` block runs each contained call as an **independent fire-and-for
 
 **Grammar reference**: `ParallelBlock` (§2.2).
 
-```axon
+```Skill Craft
 parallel {
   - call FileExporter.export_to_pdf(content: ResearchCompany.report, filename: "apple.pdf")
   - call EmailSender.send(recipient: "team@co.com", subject: "Apple research complete", body: ResearchCompany.report)
@@ -662,7 +662,7 @@ A `pipe(strategy: per_item) { }` block runs a producer/consumer chain in **strea
 
 **Grammar reference**: `PipeBlock`, `PipeStrategy` (§2.2).
 
-```axon
+```Skill Craft
 pipe(strategy: per_item) {
   - call QuestionGenerator.generate_questions(topic: "Apple Inc", amount: 5)
   - call EmailSender.send(recipient: "team@co.com", subject: "Follow-up question", body: ResearchCompany.report)
@@ -677,7 +677,7 @@ A `pipe(strategy: on_complete) { }` block runs a producer/consumer chain in **ba
 
 **Grammar reference**: `PipeBlock`, `PipeStrategy` (§2.2).
 
-```axon
+```Skill Craft
 pipe(strategy: on_complete) {
   - call QuestionGenerator.generate_questions(topic: "Apple Inc", amount: 10)
   - call EmailSender.send(recipient: "team@co.com", subject: "All follow-up questions", body: ResearchCompany.report)
@@ -688,26 +688,26 @@ pipe(strategy: on_complete) {
 
 ### 3.20 Implicit project-wide composition (no `uses` / `import`)
 
-Every `ClassName.skill_name(...)` reference is resolved by the compiler against the project-wide set of `.ax` files (per SR-7 in §4 and FR-010). There is **no** `uses`, `import`, `using`, `include`, or any other dependency-declaration syntax in Axon v1. The compiler discovers all `.ax` files in the source directory at compile time and treats their declared classes as the project's flat namespace.
+Every `ClassName.skill_name(...)` reference is resolved by the compiler against the project-wide set of `.skillc` files (per SR-7 in §4 and FR-010). There is **no** `uses`, `import`, `using`, `include`, or any other dependency-declaration syntax in Skill Craft v1. The compiler discovers all `.skillc` files in the source directory at compile time and treats their declared classes as the project's flat namespace.
 
-```axon
+```Skill Craft
 @main
 skill main {
-  - call Greeter.greet(name: "Yair")              // Greeter resolved from greeter.ax
-  - call ResearchCompany.research(topic: "X")     // ResearchCompany resolved from research_company.ax
+  - call Greeter.greet(name: "Yair")              // Greeter resolved from greeter.skillc
+  - call ResearchCompany.research(topic: "X")     // ResearchCompany resolved from research_company.skillc
 }
 ```
 
-The cost of this design choice is the possibility of name collisions across files (handled by error E9, Duplicate class name). The benefit is that authoring a multi-class project requires no import management — `.ax` files can be added or removed freely.
+The cost of this design choice is the possibility of name collisions across files (handled by error E9, Duplicate class name). The benefit is that authoring a multi-class project requires no import management — `.skillc` files can be added or removed freely.
 
 ---
 
 ## §4. Semantic rules
 
-This section lists, in numbered form, every semantic rule the Axon compiler enforces beyond the bare grammar in §2. The rules are organized by topic. Each rule follows a three-part template:
+This section lists, in numbered form, every semantic rule the Skill Craft compiler enforces beyond the bare grammar in §2. The rules are organized by topic. Each rule follows a three-part template:
 
 - **Rule** — a single sentence stating the constraint.
-- **Example** — a short Axon snippet that illustrates the constraint (often a violating snippet and its corrected form).
+- **Example** — a short Skill Craft snippet that illustrates the constraint (often a violating snippet and its corrected form).
 - **Compiler behavior** — accept or reject, and (if reject) which error from §6 fires. Each rule cross-references the FR it satisfies.
 
 The rules are numbered SR-1 through SR-23. SR-1 through SR-8 cover constructs needed by US1 (the small example); SR-9 through SR-15 cover inheritance and interfaces (US2); SR-16 through SR-21 cover threading and composition (US3); SR-22 and SR-23 cover structural file constraints (cross-cutting).
@@ -720,7 +720,7 @@ The rules are numbered SR-1 through SR-23. SR-1 through SR-8 cover constructs ne
 
 **Example** (violation):
 
-```axon
+```Skill Craft
 class Greeter {
   @private
   skill internal_helper { - do something private }
@@ -740,7 +740,7 @@ skill main {
 
 **Example**:
 
-```axon
+```Skill Craft
 class A {
   @protected
   skill helper { - do A's helper }
@@ -760,7 +760,7 @@ class B extends A {
 
 **Example**:
 
-```axon
+```Skill Craft
 skill decide(score) {
   - if score is greater than 5, summarize the report; otherwise, request a re-run
   - if more inputs are needed, ask the user clearly
@@ -775,7 +775,7 @@ The compiler does not parse `if ... otherwise ...`, does not check that "5" is a
 
 **Rule**. Arguments at a call site MUST be either all named or all positional. Mixing named and positional in a single call is not permitted. Named arguments match by parameter name in any order; positional arguments match by parameter declaration order. The compiler verifies that every required parameter (one without a default) is supplied. The LLM resolves semantic compatibility at runtime.
 
-```axon
+```Skill Craft
 // named — any order, defaulted params may be omitted
 - call generate_questions(topic: Apple Inc, style: critical thinking)
 
@@ -792,7 +792,7 @@ The compiler does not parse `if ... otherwise ...`, does not check that "5" is a
 
 **Rule**. A field's default value or a parameter's default value MUST be a simple value that the LLM compiler can recognize as a constant — a quoted string, a number, a boolean (`true`/`false`), or an unquoted word. Field references, skill calls, and compound expressions as defaults are not permitted in v1.
 
-```axon
+```Skill Craft
 // valid defaults
 @private is_validated = false
 @private max_sources = 50
@@ -811,7 +811,7 @@ The compiler does not parse `if ... otherwise ...`, does not check that "5" is a
 
 **Example**:
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call ResearchCompany.research(topic: "Apple Inc")
@@ -825,17 +825,17 @@ Here `ResearchCompany.report` resolves to a `@public` field of `ResearchCompany`
 
 #### SR-7 — Implicit project-wide class resolution
 
-**Rule**. The compiler MUST resolve every `ClassName.skill_name(...)` and every `DottedReference` (`ClassName.field_name`) against the project-wide set of `.ax` files without requiring any `uses` / `import` declaration. The compiler scans every `.ax` file in the source directory; the union of their declared classes and interfaces is the project's namespace.
+**Rule**. The compiler MUST resolve every `ClassName.skill_name(...)` and every `DottedReference` (`ClassName.field_name`) against the project-wide set of `.skillc` files without requiring any `uses` / `import` declaration. The compiler scans every `.skillc` file in the source directory; the union of their declared classes and interfaces is the project's namespace.
 
-**Example**: a `main.axm` that calls `Greeter.greet(...)` succeeds without declaring any import, provided `greeter.ax` exists in the project.
+**Example**: a `main.skillcm` that calls `Greeter.greet(...)` succeeds without declaring any import, provided `greeter.skillc` exists in the project.
 
-**Compiler behavior**: accept any call to a declared class. Reject with E6 if `ClassName` does not appear in the project's `.ax` files. Cites FR-010.
+**Compiler behavior**: accept any call to a declared class. Reject with E6 if `ClassName` does not appear in the project's `.skillc` files. Cites FR-010.
 
-#### SR-8 — Library project validity (no `.axm` is legal)
+#### SR-8 — Library project validity (no `.skillcm` is legal)
 
-**Rule**. A project containing zero `.axm` files MUST compile successfully and produce a bundle that omits `main.axc`. The manifest's `ENTRY POINT:` line is the literal `none`. The runtime (§8.8) treats such a bundle as a callable library.
+**Rule**. A project containing zero `.skillcm` files MUST compile successfully and produce a bundle that omits `main.scc`. The manifest's `ENTRY POINT:` line is the literal `none`. The runtime (§8.8) treats such a bundle as a callable library.
 
-**Example**: a project containing only `greeter.ax` (no `main.axm`) compiles to a bundle with `_manifest.axc`, `_fields/Greeter.fields`, `_skills/Greeter.greet.skill`, `_skills/Greeter.recall.skill`, and no `main.axc`.
+**Example**: a project containing only `greeter.skillc` (no `main.skillcm`) compiles to a bundle with `_manifest.scc`, `_fields/Greeter.fields`, `_skills/Greeter.greet.skill`, `_skills/Greeter.recall.skill`, and no `main.scc`.
 
 **Compiler behavior**: accept. Cites FR-021.
 
@@ -843,11 +843,11 @@ Here `ResearchCompany.report` resolves to a `@public` field of `ResearchCompany`
 
 #### SR-9 — Inheritance resolution order
 
-**Rule**. When the resolver walks the `extends` chain, it does so depth-first along the single-parent chain. Because Axon enforces single inheritance (FR-004), the chain is a path, not a tree, and the lookup order is unambiguous: this class, then parent, then grandparent, and so on. The walk halts at the first class that declares the member; if the walk reaches a class with no `extends` and the member is still not found, the lookup fails (E6).
+**Rule**. When the resolver walks the `extends` chain, it does so depth-first along the single-parent chain. Because Skill Craft enforces single inheritance (FR-004), the chain is a path, not a tree, and the lookup order is unambiguous: this class, then parent, then grandparent, and so on. The walk halts at the first class that declares the member; if the walk reaches a class with no `extends` and the member is still not found, the lookup fails (E6).
 
 **Example**:
 
-```axon
+```Skill Craft
 class A {
   @protected
   skill base_helper { - A's helper }
@@ -873,7 +873,7 @@ class C extends B {
 
 **Example A** (legal override):
 
-```axon
+```Skill Craft
 class A {
   @public
   virtual skill greet { - hi }
@@ -887,7 +887,7 @@ class B extends A {
 
 **Example B** (E5 — sealed parent):
 
-```axon
+```Skill Craft
 class A {
   @public
   sealed skill greet { - hi }
@@ -901,7 +901,7 @@ class B extends A {
 
 **Example C** (E8 — child re-marks override mode):
 
-```axon
+```Skill Craft
 class A {
   @public
   virtual skill greet { - hi }
@@ -921,7 +921,7 @@ class B extends A {
 
 **Example** (violation):
 
-```axon
+```Skill Craft
 abstract class Research { /* ... */ }
 
 @main
@@ -938,7 +938,7 @@ skill main {
 
 **Example A** (missing skill):
 
-```axon
+```Skill Craft
 interface Researchable { @public skill research(topic) }
 
 class C implements Researchable {
@@ -948,7 +948,7 @@ class C implements Researchable {
 
 **Example B** (wrong visibility):
 
-```axon
+```Skill Craft
 class C implements Researchable {
   @protected
   skill research(topic) { /* ... */ }    // VIOLATION: must be @public
@@ -963,7 +963,7 @@ class C implements Researchable {
 
 **Example A** (no parent):
 
-```axon
+```Skill Craft
 class Greeter {                       // no extends
   @public
   skill greet {
@@ -974,7 +974,7 @@ class Greeter {                       // no extends
 
 **Example B** (member missing in ancestor):
 
-```axon
+```Skill Craft
 class A { }
 class B extends A {
   @public
@@ -992,7 +992,7 @@ class B extends A {
 
 **Example** (violation):
 
-```axon
+```Skill Craft
 class A {
   @public
   virtual skill greet { - hi }
@@ -1022,7 +1022,7 @@ class B extends A {
 
 **Example**:
 
-```axon
+```Skill Craft
 parallel {
   - call FileExporter.export_to_pdf(content: ResearchCompany.report, filename: "apple.pdf")
   - call EmailSender.send(recipient: "team@co.com", subject: "Done", body: ResearchCompany.report)
@@ -1039,7 +1039,7 @@ Both calls launch simultaneously; neither observes the other's intermediate stat
 
 **Example**:
 
-```axon
+```Skill Craft
 pipe(strategy: per_item) {
   - call QuestionGenerator.generate_questions(topic: "X", amount: 5)
   - call EmailSender.send(recipient: "team@co.com", subject: "Follow-up question", body: ResearchCompany.report)
@@ -1056,7 +1056,7 @@ The producer emits five questions; the consumer runs once per question.
 
 **Example**:
 
-```axon
+```Skill Craft
 pipe(strategy: on_complete) {
   - call QuestionGenerator.generate_questions(topic: "X", amount: 5)
   - call EmailSender.send(recipient: "team@co.com", subject: "All questions", body: ResearchCompany.report)
@@ -1073,7 +1073,7 @@ pipe(strategy: on_complete) {
 
 **Example**:
 
-```axon
+```Skill Craft
 pipe(strategy: per_item) {
   - call A.produce
   - call B.transform
@@ -1087,9 +1087,9 @@ A streams to B item-by-item; B streams its outputs to C item-by-item. The strate
 
 #### SR-20 — Implicit project-wide composition
 
-**Rule**. The compiler scans every `.ax` file in the source directory and treats the union of their declared classes and interfaces as the project's namespace. Every `ClassName.skill_name(...)` reference and every `DottedReference` resolves against this union without any developer-supplied `uses` / `import` declaration. Cross-file class-name collisions are rejected as E9.
+**Rule**. The compiler scans every `.skillc` file in the source directory and treats the union of their declared classes and interfaces as the project's namespace. Every `ClassName.skill_name(...)` reference and every `DottedReference` resolves against this union without any developer-supplied `uses` / `import` declaration. Cross-file class-name collisions are rejected as E9.
 
-**Example**: A project with `greeter.ax` and `main.axm` requires no import; `main.axm` calling `Greeter.greet(name: "Yair")` succeeds because the compiler discovers `Greeter` in the source directory.
+**Example**: A project with `greeter.skillc` and `main.skillcm` requires no import; `main.skillcm` calling `Greeter.greet(name: "Yair")` succeeds because the compiler discovers `Greeter` in the source directory.
 
 **Compiler behavior**: accept all cross-class references whose target exists in the project. Cites FR-010, FR-022.
 
@@ -1099,7 +1099,7 @@ A streams to B item-by-item; B streams its outputs to C item-by-item. The strate
 
 **Example**:
 
-```axon
+```Skill Craft
 class Aggregator {
   @public
   skill run(topic) {
@@ -1111,20 +1111,20 @@ class Aggregator {
 }
 ```
 
-`Aggregator.run` contains a `parallel { }` block. The compiler emits it into `_skills/Aggregator.run.skill` using the same `- parallel:` marker convention as for `main.axc`.
+`Aggregator.run` contains a `parallel { }` block. The compiler emits it into `_skills/Aggregator.run.skill` using the same `- parallel:` marker convention as for `main.scc`.
 
 **Compiler behavior**: accept. From data-model.md MainSkill note.
 
 ### 4.4 Structural file constraints
 
-#### SR-22 — One declaration per `.ax` file
+#### SR-22 — One declaration per `.skillc` file
 
-**Rule**. An `.ax` file MUST contain exactly one of: a `ClassDecl`, an `AbstractClassDecl`, or an `InterfaceDecl`. Two top-level declarations in one file are a parse error. An `.ax` file MUST NOT contain a `MainDecl` (`@main` is reserved for `.axm` files).
+**Rule**. An `.skillc` file MUST contain exactly one of: a `ClassDecl`, an `AbstractClassDecl`, or an `InterfaceDecl`. Two top-level declarations in one file are a parse error. An `.skillc` file MUST NOT contain a `MainDecl` (`@main` is reserved for `.skillcm` files).
 
 **Example** (violation):
 
-```axon
-// file: things.ax
+```Skill Craft
+// file: things.skillc
 class Foo { }
 class Bar { }    // VIOLATION — second declaration in the same file
 ```
@@ -1140,7 +1140,7 @@ class Bar { }    // VIOLATION — second declaration in the same file
 
 **Example A** (violation):
 
-```axon
+```Skill Craft
 @protected
 abstract skill gather_sources(topic) {     // VIOLATION — abstract has no body
   - do something
@@ -1149,7 +1149,7 @@ abstract skill gather_sources(topic) {     // VIOLATION — abstract has no body
 
 **Example B** (violation):
 
-```axon
+```Skill Craft
 @public
 skill greet(name)     // VIOLATION — non-abstract requires body
 ```
@@ -1160,13 +1160,13 @@ skill greet(name)     // VIOLATION — non-abstract requires body
 
 ## §5. Compiler architecture
 
-The Axon compiler is not classical code. It is an Axon skill — a precise set of instructions that Claude follows to transform `.ax` and `.axm` source files into a compiled bundle. The runtime is a second Axon skill that Claude follows to execute the bundle.
+the Skill Craft compiler is not classical code. It is a Skill Craft skill — a precise set of instructions that Claude follows to transform `.skillc` and `.skillcm` source files into a compiled bundle. The runtime is a second Skill Craft skill that Claude follows to execute the bundle.
 
 ### 5.1 Stage 1 — The compiler skill
 
 The compiler skill instructs Claude to:
 
-1. **Discover sources** — read all `.ax` files and at most one `.axm` file from the source directory
+1. **Discover sources** — read all `.skillc` files and at most one `.skillcm` file from the source directory
 2. **Parse structure** — for each file, identify the class, abstract class, or interface declaration; its fields block; its skills with visibility and override mode; its parameter lists; and its instruction bullets. Instruction bullets are treated as opaque text and are not interpreted.
 3. **Resolve references** — build the class graph; walk inheritance chains; for every `call` instruction, verify the referenced class and skill exist and are accessible from the call site
 4. **Validate rules** — enforce all structural rules: abstract skills implemented, interface contracts satisfied, visibility respected, sealed skills not overridden, no cyclical inheritance, no duplicate class names, at most one `@main`
@@ -1177,8 +1177,8 @@ The compiler skill instructs Claude to:
 
 The runtime skill instructs Claude to:
 
-1. **Read the manifest** — load `_manifest.axc` first to understand the class graph, inheritance chains, interface implementations, and skill locations
-2. **Resolve the entry point** — if `main.axc` is present, begin execution there; otherwise treat the bundle as a callable library awaiting user instruction
+1. **Read the manifest** — load `_manifest.scc` first to understand the class graph, inheritance chains, interface implementations, and skill locations
+2. **Resolve the entry point** — if `main.scc` is present, begin execution there; otherwise treat the bundle as a callable library awaiting user instruction
 3. **Execute skills** — for each skill call, locate the skill file via the manifest, load its fields context, and execute its instruction bullets in order
 4. **Honor threading** — execute `parallel {}` blocks as concurrent agents with no shared intermediate state; execute `pipe(strategy: per_item)` blocks in streaming mode; execute `pipe(strategy: on_complete)` blocks in batch mode
 5. **Resolve references at runtime** — `this.*` resolves against the executing class's manifest entry; `base.*` walks the ancestor chain via the manifest
@@ -1187,17 +1187,17 @@ The runtime skill instructs Claude to:
 ### 5.3 Toolchain
 
 ```
-.ax source files + optional .axm
+.skillc source files + optional .skillcm
         ↓
-Claude reads AxonCompiler.compile skill
+Claude reads SkillCraftCompiler.compile skill
         ↓
 validates structure and references
         ↓ (errors block emission)
 emits compiled bundle directory
         ↓
-Claude reads AxonRuntime.execute skill
+Claude reads SkillCraftRuntime.execute skill
         ↓
-reads _manifest.axc → executes skills
+reads _manifest.scc → executes skills
 ```
 
 No classical programming language is required. Claude is both the compiler and the runtime.
@@ -1206,7 +1206,7 @@ No classical programming language is required. Claude is both the compiler and t
 
 ## §6. Compiler error catalog
 
-This section enumerates every compiler error the Axon compiler MUST detect, the exact message format, an example source snippet that triggers each error, and a suggested fix. It is the contract between the compiler (which produces errors) and the developer (who must understand and resolve them). It implements FR-027, FR-028, FR-029 and is the section a developer who has hit an error should consult first.
+This section enumerates every compiler error the Skill Craft compiler MUST detect, the exact message format, an example source snippet that triggers each error, and a suggested fix. It is the contract between the compiler (which produces errors) and the developer (who must understand and resolve them). It implements FR-027, FR-028, FR-029 and is the section a developer who has hit an error should consult first.
 
 ### 6.1 Common message format
 
@@ -1232,7 +1232,7 @@ ERROR in <file_path>, line <N>, column <M>:
 
 If multiple errors are detected in a project, the compiler MUST emit them ALL (not just the first), separated by one blank line each, and exit non-zero (FR-029). No partial bundle is written on any error.
 
-A small subset of errors are project-wide rather than tied to a single file/line (notably E10 sub-case A: two `.axm` files). For those errors, the `line <N>, column <M>` portion of the header is omitted and replaced by `ERROR (project-wide):`.
+A small subset of errors are project-wide rather than tied to a single file/line (notably E10 sub-case A: two `.skillcm` files). For those errors, the `line <N>, column <M>` portion of the header is omitted and replaced by `ERROR (project-wide):`.
 
 ### 6.2 The ten errors
 
@@ -1240,9 +1240,9 @@ A small subset of errors are project-wide rather than tied to a single file/line
 
 **Triggered when** a concrete class extends an abstract ancestor but does not declare every inherited abstract skill.
 
-**Example source** (`research_company.ax`):
+**Example source** (`research_company.skillc`):
 
-```axon
+```Skill Craft
 abstract class Research {
   @protected abstract skill gather_sources(topic)
   @protected abstract skill validate_sources
@@ -1260,7 +1260,7 @@ class ResearchCompany extends Research {
 **Message**:
 
 ```
-ERROR in research_company.ax, line 7, column 1:
+ERROR in research_company.skillc, line 7, column 1:
   Class 'ResearchCompany' inherits from abstract class 'Research'
   but does not implement abstract skill 'validate_sources'.
 
@@ -1276,9 +1276,9 @@ ERROR in research_company.ax, line 7, column 1:
 
 **Triggered when** a class declares `implements <Interface>` but does not provide a `@public` skill matching one of the interface's required signatures (or provides it with the wrong visibility).
 
-**Example source** (`research_company.ax`):
+**Example source** (`research_company.skillc`):
 
-```axon
+```Skill Craft
 interface Researchable {
   @public skill research(topic)
 }
@@ -1294,7 +1294,7 @@ class ResearchCompany implements Researchable {
 **Message**:
 
 ```
-ERROR in research_company.ax, line 6, column 1:
+ERROR in research_company.skillc, line 6, column 1:
   Class 'ResearchCompany' claims to implement interface 'Researchable'
   but skill 'research' has visibility @protected; interface contracts require @public.
 
@@ -1310,9 +1310,9 @@ A second sub-case: a required skill is missing entirely. The message replaces th
 
 **Triggered when** a skill body uses `base.<member>` in a class that has no `extends` clause, or references a member that does not exist in the ancestor chain.
 
-**Example source A** (no parent — `greeter.ax`):
+**Example source A** (no parent — `greeter.skillc`):
 
-```axon
+```Skill Craft
 class Greeter {
   @public
   skill greet {
@@ -1324,7 +1324,7 @@ class Greeter {
 **Message**:
 
 ```
-ERROR in greeter.ax, line 4, column 12:
+ERROR in greeter.skillc, line 4, column 12:
   'base.recall' is invalid: class 'Greeter' does not extend any class.
 
   Suggested fix — either remove the base.* reference, or have Greeter extend
@@ -1335,7 +1335,7 @@ ERROR in greeter.ax, line 4, column 12:
 
 **Example source B** (parent exists but member does not):
 
-```axon
+```Skill Craft
 class A { }
 class B extends A {
   @public
@@ -1348,7 +1348,7 @@ class B extends A {
 **Message**:
 
 ```
-ERROR in b.ax, line 5, column 12:
+ERROR in b.skillc, line 5, column 12:
   'base.does_not_exist' is invalid: class 'A' does not define 'does_not_exist'.
 
   Suggested fix — either define 'does_not_exist' in 'A' or one of its ancestors,
@@ -1359,9 +1359,9 @@ ERROR in b.ax, line 5, column 12:
 
 **Triggered when** a `@private` member is referenced from outside its owning class, or a `@protected` member is referenced from outside its inheritance chain. Two related sub-cases ride on this error: invocation of an abstract class from `main` (SR-11) and a narrower override visibility than the parent declared (SR-14).
 
-**Example source** (`main.axm`):
+**Example source** (`main.skillcm`):
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call ResearchCompany.fetch_raw_data(topic: "Apple Inc")    // fetch_raw_data is @private
@@ -1371,7 +1371,7 @@ skill main {
 **Message**:
 
 ```
-ERROR in main.axm, line 3, column 8:
+ERROR in main.skillcm, line 3, column 8:
   Cannot call '@private' skill 'fetch_raw_data' from outside class 'ResearchCompany'.
 
   Skill 'fetch_raw_data' is declared @private and is only callable from within
@@ -1389,7 +1389,7 @@ The `@protected`-violation variant uses analogous wording (`from outside the inh
 
 **Example source**:
 
-```axon
+```Skill Craft
 class A {
   @public
   sealed skill foo {
@@ -1408,7 +1408,7 @@ class B extends A {
 **Message**:
 
 ```
-ERROR in b.ax, line 10, column 1:
+ERROR in b.skillc, line 10, column 1:
   Class 'B' cannot override skill 'foo': it is declared 'sealed' in class 'A'.
 
   Suggested fix — remove the override from 'B'. If 'B' needs different behavior,
@@ -1420,9 +1420,9 @@ ERROR in b.ax, line 10, column 1:
 
 **Triggered when** a skill body references a class, skill, or field that does not exist in the project.
 
-**Example source** (`main.axm`):
+**Example source** (`main.skillcm`):
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call NoSuchClass.do_thing(topic: "x")
@@ -1432,10 +1432,10 @@ skill main {
 **Message**:
 
 ```
-ERROR in main.axm, line 3, column 8:
+ERROR in main.skillcm, line 3, column 8:
   Unknown reference: class 'NoSuchClass' is not defined in this project.
 
-  Suggested fix — check the spelling, or add a 'no_such_class.ax' file
+  Suggested fix — check the spelling, or add a 'no_such_class.skillc' file
   declaring 'class NoSuchClass { ... }'.
 ```
 
@@ -1453,21 +1453,21 @@ The compiler SHOULD perform a "did you mean?" suggestion when a close match exis
 
 **Example source** (across three files):
 
-```axon
-// a.ax
+```Skill Craft
+// a.skillc
 class A extends C { }
 
-// b.ax
+// b.skillc
 class B extends A { }
 
-// c.ax
+// c.skillc
 class C extends B { }
 ```
 
 **Message**:
 
 ```
-ERROR in a.ax, line 1, column 1:
+ERROR in a.skillc, line 1, column 1:
   Cyclical inheritance detected:
 
     A → C → B → A
@@ -1484,7 +1484,7 @@ The cycle path MUST be printed starting at the class declared in the file the er
 
 **Example source**:
 
-```axon
+```Skill Craft
 class A {
   @public
   virtual skill foo {
@@ -1501,7 +1501,7 @@ class B extends A {
 **Message**:
 
 ```
-ERROR in b.ax, line 10, column 1:
+ERROR in b.skillc, line 10, column 1:
   Override mode mismatch on 'B.foo': a child class cannot mark an overriding
   skill as 'abstract' or 'virtual'. The override mode is determined by the
   declaring (ancestor) class.
@@ -1518,18 +1518,18 @@ A related sub-case: the child re-declares the parent's skill as `sealed`. Sealed
 
 #### E9 — Duplicate class name
 
-**Triggered when** two `.ax` files declare a class (or interface) with the same name.
+**Triggered when** two `.skillc` files declare a class (or interface) with the same name.
 
 **Example source**:
 
-- `greeter.ax`: `class Greeter { ... }`
-- `greeter2.ax`: `class Greeter { ... }`
+- `greeter.skillc`: `class Greeter { ... }`
+- `greeter2.skillc`: `class Greeter { ... }`
 
 **Message**:
 
 ```
-ERROR in greeter2.ax, line 1, column 1:
-  Duplicate class name 'Greeter'. Already declared in greeter.ax (line 1).
+ERROR in greeter2.skillc, line 1, column 1:
+  Duplicate class name 'Greeter'. Already declared in greeter.skillc (line 1).
 
   Suggested fix — rename one of the classes, or merge them into a single
   declaration if they were meant to be the same.
@@ -1539,18 +1539,18 @@ The error points to the **second** occurrence (in lexicographic file order if th
 
 #### E10 — Multiple `@main` skills
 
-**Triggered when** either (a) the project contains more than one `.axm` file, or (b) a single `.axm` contains more than one `@main` skill declaration. Sub-case (c) — `@main` declared inside an `.ax` file (misplaced) — is reported as E10 as well, since structurally it has the same root cause (the `@main` token is in the wrong place).
+**Triggered when** either (a) the project contains more than one `.skillcm` file, or (b) a single `.skillcm` contains more than one `@main` skill declaration. Sub-case (c) — `@main` declared inside an `.skillc` file (misplaced) — is reported as E10 as well, since structurally it has the same root cause (the `@main` token is in the wrong place).
 
-**Example case A** — two `.axm` files: `main.axm`, `main2.axm`.
+**Example case A** — two `.skillcm` files: `main.skillcm`, `main2.skillcm`.
 
 **Message**:
 
 ```
 ERROR (project-wide):
-  Project contains multiple .axm files:
+  Project contains multiple .skillcm files:
 
-    - main.axm
-    - main2.axm
+    - main.skillcm
+    - main2.skillcm
 
   A project must declare at most one @main entry point.
 
@@ -1562,7 +1562,7 @@ ERROR (project-wide):
 
 **Example case B** — single file with two `@main`:
 
-```axon
+```Skill Craft
 @main
 skill main {
   - ...
@@ -1577,16 +1577,16 @@ skill main {
 **Message**:
 
 ```
-ERROR in main.axm, line 6, column 1:
+ERROR in main.skillcm, line 6, column 1:
   Multiple @main skills declared in a single file. Exactly one @main is permitted.
 
   Suggested fix — keep only one @main skill block and remove the others.
 ```
 
-**Example case C** — misplaced `@main` in an `.ax` file:
+**Example case C** — misplaced `@main` in an `.skillc` file:
 
-```axon
-// file: foo.ax  (NOT main.axm)
+```Skill Craft
+// file: foo.skillc  (NOT main.skillcm)
 @main
 skill main {
   - call Greeter.greet(name: "Yair")
@@ -1596,13 +1596,13 @@ skill main {
 **Message**:
 
 ```
-ERROR in foo.ax, line 1, column 1:
-  '@main' declared inside an .ax file. The @main entry point belongs in a
-  .axm file (project-wide, at most one).
+ERROR in foo.skillc, line 1, column 1:
+  '@main' declared inside an .skillc file. The @main entry point belongs in a
+  .skillcm file (project-wide, at most one).
 
-  Suggested fix — move this block to a main.axm file:
+  Suggested fix — move this block to a main.skillcm file:
 
-    // main.axm
+    // main.skillcm
     @main
     skill main {
       ...
@@ -1630,16 +1630,16 @@ All ten errors are covered. Each catalog entry contains: trigger description, ex
 
 ## §7. Output bundle format
 
-This section specifies the on-disk shape of an Axon compiled bundle precisely enough that two independent compiler implementations would produce **byte-equivalent** bundles for the same input project (Success Criterion SC-004, FR-038). It is the contract between the compiler (which produces bundles) and the LLM runtime (which consumes them). It implements FR-023, FR-024, FR-025, and FR-026.
+This section specifies the on-disk shape of a Skill Craft compiled bundle precisely enough that two independent compiler implementations would produce **byte-equivalent** bundles for the same input project (Success Criterion SC-004, FR-038). It is the contract between the compiler (which produces bundles) and the LLM runtime (which consumes them). It implements FR-023, FR-024, FR-025, and FR-026.
 
 ### 7.1 Directory layout
 
-Every Axon compiled bundle is a directory with the following layout. Items shown in parentheses are conditional.
+Every Skill Craft compiled bundle is a directory with the following layout. Items shown in parentheses are conditional.
 
 ```
 <bundle_root>/
-  _manifest.axc                              (always present)
-  (main.axc)                                 (present iff project had a .axm file)
+  _manifest.scc                              (always present)
+  (main.scc)                                 (present iff project had a .skillcm file)
   _fields/
     <ClassName>.fields                       (one per class that declares its own fields)
     ...
@@ -1655,7 +1655,7 @@ The compiler MUST emit files such that:
 1. The directories `_fields/` and `_skills/` are created before any contained files.
 2. Within `_fields/`, files MUST be sorted by class name lexicographically (ASCII).
 3. Within `_skills/`, files MUST be sorted first by class name then by skill name, both lexicographically.
-4. `_manifest.axc` is the **last** file written, after all referenced files exist.
+4. `_manifest.scc` is the **last** file written, after all referenced files exist.
 
 This ordering, together with the deterministic content rules in §7.3–§7.6 below, is what makes the bundle byte-equivalent across implementations.
 
@@ -1821,7 +1821,7 @@ BODY:
 
 `_skills/ResearchCompany.research.skill` is **not** present in the bundle — `ResearchCompany.research` is inherited unchanged from `Research`. The manifest (§7.6) records that the child's `research` skill resolves to `_skills/Research.research.skill`. This is the DRY guarantee made byte-concrete.
 
-### 7.5 `main.axc` schema
+### 7.5 `main.scc` schema
 
 The compiled main file. Same overall shape as a `.skill` file but with a different header and no class context.
 
@@ -1855,14 +1855,14 @@ BODY:
 
   The `parallel:` and `pipe (strategy: <name>):` markers replace a normal `- ` instruction prefix. Each contained call is indented by four spaces from the block marker.
 
-### 7.6 `_manifest.axc` schema
+### 7.6 `_manifest.scc` schema
 
 The first file the runtime reads. Enumerates the project's class graph, interface contracts, and entry point. Uses section headers.
 
 #### 7.6.1 Format
 
 ```
-AXON BUNDLE v1
+Skill Craft BUNDLE v1
 ==============
 
 CLASSES:
@@ -1887,12 +1887,12 @@ INTERFACES:
       ...
 
 ENTRY POINT:
-  <main.axc | none>
+  <main.scc | none>
 ```
 
 #### 7.6.2 Rules
 
-- The header line `AXON BUNDLE v1` and its `=` underline are constants. The `=` line MUST be exactly 14 characters (the length of `AXON BUNDLE v1`).
+- The header line `Skill Craft BUNDLE v1` and its `=` underline are constants. The `=` line MUST be exactly 14 characters (the length of `Skill Craft BUNDLE v1`).
 - Section headers `CLASSES:`, `INTERFACES:`, and `ENTRY POINT:` appear in this order, each preceded by exactly one blank line.
 - `<kind>` is `[abstract]` or `[concrete]`.
 - Class entries within `CLASSES:` MUST be sorted lexicographically by class name.
@@ -1900,13 +1900,13 @@ ENTRY POINT:
 - Within a class's `skills:` list, entries MUST be sorted lexicographically by skill name.
 - For inherited-but-not-overridden skills, the override-mode tag is `inherited from <ParentClass>` and points (via the manifest semantics) to the parent's skill file.
 - For implemented interface skills, the tag includes `implements <InterfaceName>`.
-- If no `.axm` was provided, the `ENTRY POINT:` line reads `  none`.
+- If no `.skillcm` was provided, the `ENTRY POINT:` line reads `  none`.
 - Within each class entry, the skill list column for the `[visibility, override_mode_or_provenance]` annotation is right-padded with spaces so the `[` aligns at the same column for every skill in that class. The padding is purely visual; runtimes MUST ignore extra whitespace before `[`.
 
 #### 7.6.3 Example (medium example)
 
 ```
-AXON BUNDLE v1
+Skill Craft BUNDLE v1
 ==============
 
 CLASSES:
@@ -1939,7 +1939,7 @@ INTERFACES:
       - research             [@public]
 
 ENTRY POINT:
-  main.axc
+  main.scc
 ```
 
 ### 7.7 Byte-equivalence checklist
@@ -1961,7 +1961,7 @@ A compiler that fails any item above is non-conforming.
 
 ## §8. Runtime contract
 
-This section specifies what the runtime — Claude — does when given an Axon compiled bundle. It implements FR-030 and FR-031. The contract is written as a sequence of obligations the LLM runtime MUST observe. The bundle is the only artifact the runtime ever sees; the original `.ax` / `.axm` sources are never handed to it (Assumptions in spec.md).
+This section specifies what the runtime — Claude — does when given a Skill Craft compiled bundle. It implements FR-030 and FR-031. The contract is written as a sequence of obligations the LLM runtime MUST observe. The bundle is the only artifact the runtime ever sees; the original `.skillc` / `.skillcm` sources are never handed to it (Assumptions in spec.md).
 
 ### 8.1 Bundle handoff
 
@@ -1969,13 +1969,13 @@ When a developer asks Claude to "execute this bundle," the input Claude is given
 
 ### 8.2 Manifest-first ordering
 
-Before reading any `.skill` file, `.fields` file, or `main.axc`, Claude MUST read `_manifest.axc` in full. The manifest's structure (§7.6) is the runtime's single source of truth for:
+Before reading any `.skill` file, `.fields` file, or `main.scc`, Claude MUST read `_manifest.scc` in full. The manifest's structure (§7.6) is the runtime's single source of truth for:
 
 - Which classes exist in this bundle, abstract vs concrete.
 - Each class's `extends` parent (if any), `implements` interfaces (if any), and its full skill list with visibility + override-mode annotations.
 - The path to each class's own `.fields` file and to any inherited `.fields` files.
 - The full set of interfaces declared in the project and their required skill signatures.
-- The entry point — either a path to `main.axc` or the literal `none` if the bundle is a library.
+- The entry point — either a path to `main.scc` or the literal `none` if the bundle is a library.
 
 The runtime MUST NOT attempt to discover the class graph by directory scan. The manifest is authoritative.
 
@@ -2012,7 +2012,7 @@ The runtime is responsible for terminating: if a skill body recurses or loops se
 
 ### 8.6 Executing `parallel { }` blocks
 
-When the runtime encounters a `parallel:` entry inside a `BODY:` list (in `main.axc` or any skill — see §4 SR-21), it MUST:
+When the runtime encounters a `parallel:` entry inside a `BODY:` list (in `main.scc` or any skill — see §4 SR-21), it MUST:
 
 1. Launch each contained call as an **independent agent** with no shared intermediate state with the other branches. Each branch sees only the parameter values bound at its call site and any `@public` field values it reads through the manifest.
 2. Treat the branches as **fire-and-forget**: the parent skill continues immediately past the `parallel:` block; results from inside the parallel block are not collected into a return value.
@@ -2030,11 +2030,11 @@ When the runtime encounters a `pipe (strategy: <name>):` entry inside a `BODY:` 
 
 The pipe block returns to the parent skill once all stages have completed.
 
-### 8.8 Executing `main.axc`
+### 8.8 Executing `main.scc`
 
-If the bundle's manifest names a non-`none` `ENTRY POINT:`, the runtime begins execution at `main.axc`:
+If the bundle's manifest names a non-`none` `ENTRY POINT:`, the runtime begins execution at `main.scc`:
 
-1. Read `main.axc`.
+1. Read `main.scc`.
 2. Walk its `BODY:` list top-to-bottom, executing each instruction as described above.
 3. When the body completes, the program is done. Report final status to the user in plain language.
 
@@ -2054,29 +2054,29 @@ The spec does not prescribe a structured runtime error format beyond these three
 
 Restated as a numbered checklist for implementation review:
 
-1. Read `_manifest.axc` first; never scan the directory for the class graph.
+1. Read `_manifest.scc` first; never scan the directory for the class graph.
 2. Resolve every `this.*` / `base.*` / `ClassName.skill_name` reference through the manifest.
 3. Honor visibility annotations as a defense-in-depth check.
 4. Execute `parallel { }` as fire-and-forget concurrent agents with no shared intermediate state.
 5. Execute `pipe(strategy: per_item)` as streaming and `pipe(strategy: on_complete)` as batch; apply strategy pairwise between consecutive stages.
-6. Execute `main.axc` if the manifest names one; otherwise treat the bundle as a callable library and wait for an explicit request.
+6. Execute `main.scc` if the manifest names one; otherwise treat the bundle as a callable library and wait for an explicit request.
 7. Surface runtime failures in plain language identifying the failing skill, the failing instruction, and the cause.
 
 ---
 
 ## §9. Example programs
 
-This section presents three complete Axon programs of increasing complexity and, for the medium example, the full compiled bundle that the compiler MUST produce from it. Together the examples cover every language construct cited in FR-001 through FR-022 (per FR-040, SC-002, SC-007). Each example is also available as standalone source files under `docs/axon/examples/`; the medium example's compiled bundle is available under `docs/axon/examples-compiled/medium/`.
+This section presents three complete Skill Craft programs of increasing complexity and, for the medium example, the full compiled bundle that the compiler MUST produce from it. Together the examples cover every language construct cited in FR-001 through FR-022 (per FR-040, SC-002, SC-007). Each example is also available as standalone source files under `docs/skillcraft/examples/`; the medium example's compiled bundle is available under `docs/skillcraft/examples-compiled/medium/`.
 
 ### 9.1 Small example — `Greeter`
 
-The smallest end-to-end Axon program. One class, two skills, one field, no inheritance, no interfaces, no threading. The smallest program that proves the language has end-to-end value.
+The smallest end-to-end Skill Craft program. One class, two skills, one field, no inheritance, no interfaces, no threading. The smallest program that proves the language has end-to-end value.
 
 #### 9.1.1 Source files
 
-`docs/axon/examples/small/greeter.ax`:
+`docs/skillcraft/examples/small/greeter.skillc`:
 
-```axon
+```Skill Craft
 class Greeter {
 
   fields {
@@ -2096,9 +2096,9 @@ class Greeter {
 }
 ```
 
-`docs/axon/examples/small/main.axm`:
+`docs/skillcraft/examples/small/main.skillcm`:
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call Greeter.greet(name: "Yair")
@@ -2110,7 +2110,7 @@ skill main {
 
 Compiling the small example MUST produce a bundle whose contents — when verified against the schemas in §7 — match the following description exactly.
 
-**`_manifest.axc`** is the first file the runtime reads. It enumerates exactly one class (`Greeter`, concrete, no parent, no implemented interfaces), records the path to that class's own fields file, and lists its two skills `greet` and `recall` in lexicographic order, each tagged with its visibility (`@public`) and override mode (`default` — neither skill overrides an inherited skill, and neither is virtual or sealed). The entry point line names `main.axc`.
+**`_manifest.scc`** is the first file the runtime reads. It enumerates exactly one class (`Greeter`, concrete, no parent, no implemented interfaces), records the path to that class's own fields file, and lists its two skills `greet` and `recall` in lexicographic order, each tagged with its visibility (`@public`) and override mode (`default` — neither skill overrides an inherited skill, and neither is virtual or sealed). The entry point line names `main.scc`.
 
 **`_fields/Greeter.fields`** contains a single `CLASS: Greeter` header followed by one field line declaring `@private last_greeting` with no default. Source order is preserved (there is only one field, so ordering is trivial).
 
@@ -2118,19 +2118,19 @@ Compiling the small example MUST produce a bundle whose contents — when verifi
 
 **`_skills/Greeter.recall.skill`** is the body file for the `recall` skill. Its header records the same `CLASS` and identical fields-related lines as `greet`. `PARAMS:` is `none` (recall takes no parameters). `DEPENDS ON:` is empty. The `BODY:` section contains the single bullet `- return this.last_greeting`.
 
-**`main.axc`** is the compiled entry point. Its `ENTRY:` line is `main`. Its `DEPENDS ON:` block lists the two skill files it calls — `_skills/Greeter.greet.skill` and `_skills/Greeter.recall.skill` — sorted lexicographically. Its `BODY:` section contains the two `- call Greeter.greet(name: "Yair")` and `- call Greeter.recall` bullets in source order.
+**`main.scc`** is the compiled entry point. Its `ENTRY:` line is `main`. Its `DEPENDS ON:` block lists the two skill files it calls — `_skills/Greeter.greet.skill` and `_skills/Greeter.recall.skill` — sorted lexicographically. Its `BODY:` section contains the two `- call Greeter.greet(name: "Yair")` and `- call Greeter.recall` bullets in source order.
 
 #### 9.1.3 Execution narrative
 
 When Claude is handed this bundle and asked to execute it:
 
-1. Claude reads `_manifest.axc` first, learning that one class `Greeter` exists with two skills `greet` and `recall`, and that the entry point is `main.axc`.
-2. Claude reads `main.axc`, which directs it to call `Greeter.greet(name: "Yair")` then `Greeter.recall`.
+1. Claude reads `_manifest.scc` first, learning that one class `Greeter` exists with two skills `greet` and `recall`, and that the entry point is `main.scc`.
+2. Claude reads `main.scc`, which directs it to call `Greeter.greet(name: "Yair")` then `Greeter.recall`.
 3. For the first call, Claude reads `_skills/Greeter.greet.skill` and executes its bullets: it greets "Yair" warmly (the first bullet) and stores that greeting into `Greeter.last_greeting` (the second bullet — a field write to the class's shared state).
 4. For the second call, Claude reads `_skills/Greeter.recall.skill` and executes its single bullet: it returns the stored greeting.
 5. The program ends. Claude reports the final greeting back to the user.
 
-If the bundle is handed to Claude without a `main.axc` (a library bundle — see SR-8), Claude does not execute spontaneously; it waits for an explicit call request from the user.
+If the bundle is handed to Claude without a `main.scc` (a library bundle — see SR-8), Claude does not execute spontaneously; it waits for an explicit call request from the user.
 
 ### 9.2 Medium example — `Research` / `ResearchCompany` / `Researchable`
 
@@ -2138,17 +2138,17 @@ The medium example exercises inheritance (abstract base + concrete child), inter
 
 #### 9.2.1 Source files
 
-`docs/axon/examples/medium/researchable.ax`:
+`docs/skillcraft/examples/medium/researchable.skillc`:
 
-```axon
+```Skill Craft
 interface Researchable {
   @public skill research(topic)
 }
 ```
 
-`docs/axon/examples/medium/research.ax`:
+`docs/skillcraft/examples/medium/research.skillc`:
 
-```axon
+```Skill Craft
 abstract class Research {
 
   fields {
@@ -2178,9 +2178,9 @@ abstract class Research {
 }
 ```
 
-`docs/axon/examples/medium/research_company.ax`:
+`docs/skillcraft/examples/medium/research_company.skillc`:
 
-```axon
+```Skill Craft
 class ResearchCompany extends Research implements Researchable {
 
   fields {
@@ -2207,9 +2207,9 @@ class ResearchCompany extends Research implements Researchable {
 }
 ```
 
-`docs/axon/examples/medium/main.axm`:
+`docs/skillcraft/examples/medium/main.skillcm`:
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call ResearchCompany.research(topic: "Apple Inc")
@@ -2218,12 +2218,12 @@ skill main {
 
 #### 9.2.2 Compiled bundle (byte-faithful reproduction)
 
-The compiler emits the following nine files from the four source files above. The reproduction here is byte-faithful — these are exactly the contents of `docs/axon/examples-compiled/medium/`. Two reviewers independently hand-compiling the bundle from §7 alone MUST arrive at these same bytes (SC-004 proxy).
+The compiler emits the following nine files from the four source files above. The reproduction here is byte-faithful — these are exactly the contents of `docs/skillcraft/examples-compiled/medium/`. Two reviewers independently hand-compiling the bundle from §7 alone MUST arrive at these same bytes (SC-004 proxy).
 
-`_manifest.axc`:
+`_manifest.scc`:
 
 ```
-AXON BUNDLE v1
+Skill Craft BUNDLE v1
 ==============
 
 CLASSES:
@@ -2256,7 +2256,7 @@ INTERFACES:
       - research             [@public]
 
 ENTRY POINT:
-  main.axc
+  main.scc
 ```
 
 `_fields/Research.fields`:
@@ -2358,7 +2358,7 @@ BODY:
   - add a financial highlights section to this.report
 ```
 
-`main.axc`:
+`main.scc`:
 
 ```
 ENTRY: main
@@ -2386,9 +2386,9 @@ This example demonstrates the constructs in active use; the spec does not reprod
 
 #### 9.3.1 Source files
 
-`docs/axon/examples/complex/research.ax`:
+`docs/skillcraft/examples/complex/research.skillc`:
 
-```axon
+```Skill Craft
 abstract class Research {
 
   fields {
@@ -2420,9 +2420,9 @@ abstract class Research {
 
 (Note: `report` is `@public` in the complex example so that other classes can read it via `ResearchCompany.report` — see §3.9. In the medium example, `report` was `@protected`.)
 
-`docs/axon/examples/complex/research_company.ax`:
+`docs/skillcraft/examples/complex/research_company.skillc`:
 
-```axon
+```Skill Craft
 class ResearchCompany extends Research {
 
   fields {
@@ -2449,9 +2449,9 @@ class ResearchCompany extends Research {
 }
 ```
 
-`docs/axon/examples/complex/question_generator.ax`:
+`docs/skillcraft/examples/complex/question_generator.skillc`:
 
-```axon
+```Skill Craft
 class QuestionGenerator {
 
   @public
@@ -2462,9 +2462,9 @@ class QuestionGenerator {
 }
 ```
 
-`docs/axon/examples/complex/file_exporter.ax`:
+`docs/skillcraft/examples/complex/file_exporter.skillc`:
 
-```axon
+```Skill Craft
 class FileExporter {
 
   @public
@@ -2475,9 +2475,9 @@ class FileExporter {
 }
 ```
 
-`docs/axon/examples/complex/email_sender.ax`:
+`docs/skillcraft/examples/complex/email_sender.skillc`:
 
-```axon
+```Skill Craft
 class EmailSender {
 
   @public
@@ -2488,9 +2488,9 @@ class EmailSender {
 }
 ```
 
-`docs/axon/examples/complex/main.axm`:
+`docs/skillcraft/examples/complex/main.skillcm`:
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call ResearchCompany.research(topic: "Apple Inc")
@@ -2509,11 +2509,11 @@ skill main {
 
 #### 9.3.2 Execution narrative
 
-When Claude is handed the compiled bundle and asked to execute `main.axc`, the runtime proceeds as follows:
+When Claude is handed the compiled bundle and asked to execute `main.scc`, the runtime proceeds as follows:
 
-1. **Read the manifest.** The manifest enumerates five classes — `EmailSender [concrete]`, `FileExporter [concrete]`, `QuestionGenerator [concrete]`, `Research [abstract]`, `ResearchCompany [concrete]` — and zero interfaces (the complex example does not declare any). The entry point is `main.axc`. Note that no `uses` / `import` declaration appeared in any source file; the compiler discovered every class by scanning the source directory (SR-20).
+1. **Read the manifest.** The manifest enumerates five classes — `EmailSender [concrete]`, `FileExporter [concrete]`, `QuestionGenerator [concrete]`, `Research [abstract]`, `ResearchCompany [concrete]` — and zero interfaces (the complex example does not declare any). The entry point is `main.scc`. Note that no `uses` / `import` declaration appeared in any source file; the compiler discovered every class by scanning the source directory (SR-20).
 
-2. **Execute the sequential call.** `main.axc`'s first BODY entry is `- call ResearchCompany.research(topic: "Apple Inc")`. The runtime looks up `ResearchCompany.research` in the manifest, sees that the skill is `inherited from Research`, and follows the pointer to `_skills/Research.research.skill`. The body of `research` calls three skills in sequence — `this.gather_sources(topic)`, `this.validate_sources`, `this.write_report`. Because the runtime is executing `ResearchCompany.research`, `this.*` resolves against the manifest's `ResearchCompany` entry: `gather_sources` and `validate_sources` resolve to their concrete `_skills/ResearchCompany.*.skill` files; `write_report` resolves to `_skills/ResearchCompany.write_report.skill`, which itself begins with `- call base.write_report` (running `_skills/Research.write_report.skill` first, then augmenting the report). At the end of this step, `ResearchCompany.report` holds a populated report value (per SR-2 and SR-13).
+2. **Execute the sequential call.** `main.scc`'s first BODY entry is `- call ResearchCompany.research(topic: "Apple Inc")`. The runtime looks up `ResearchCompany.research` in the manifest, sees that the skill is `inherited from Research`, and follows the pointer to `_skills/Research.research.skill`. The body of `research` calls three skills in sequence — `this.gather_sources(topic)`, `this.validate_sources`, `this.write_report`. Because the runtime is executing `ResearchCompany.research`, `this.*` resolves against the manifest's `ResearchCompany` entry: `gather_sources` and `validate_sources` resolve to their concrete `_skills/ResearchCompany.*.skill` files; `write_report` resolves to `_skills/ResearchCompany.write_report.skill`, which itself begins with `- call base.write_report` (running `_skills/Research.write_report.skill` first, then augmenting the report). At the end of this step, `ResearchCompany.report` holds a populated report value (per SR-2 and SR-13).
 
 3. **Execute the `parallel { }` block.** The second BODY entry is a `- parallel:` marker with two indented call entries. The runtime MUST launch both calls as independent fire-and-forget agents (SR-16):
    - **Branch A** invokes `FileExporter.export_to_pdf(content: ResearchCompany.report, filename: "apple.pdf")`. The argument value `ResearchCompany.report` is a `DottedReference` (§3.9, SR-6): the runtime reads the `@public` field `report` from `ResearchCompany`'s state and supplies it as `content`. The skill renders the PDF and saves it.
@@ -2523,7 +2523,7 @@ When Claude is handed the compiled bundle and asked to execute `main.axc`, the r
 
 4. **Execute the `pipe(strategy: per_item) { }` block.** The third BODY entry is a `- pipe (strategy: per_item):` marker with two indented call entries. The runtime launches the producer `QuestionGenerator.generate_questions(topic: "Apple Inc", amount: 5)` and streams each emitted question to the consumer `EmailSender.send(...)`. The consumer runs once per question (SR-17). When the producer finishes emitting all five questions and all five consumer invocations complete, the block returns.
 
-5. **Done.** With the BODY list exhausted, `main.axc` completes and Claude reports final status to the user.
+5. **Done.** With the BODY list exhausted, `main.scc` completes and Claude reports final status to the user.
 
 This narrative illustrates how the compiler's responsibilities (structural correctness, resolution, DRY) and the runtime's responsibilities (free-speech interpretation, threading semantics) divide cleanly across the language design.
 
@@ -2531,13 +2531,13 @@ This narrative illustrates how the compiler's responsibilities (structural corre
 
 ## §10. Open questions and future extensions
 
-The items below are explicitly **deferred** from Axon v1. They are recorded here (per FR-041) so that future revisions know where the unfinished design surface lies and so that users of v1 do not write code that depends on undefined behavior in these areas.
+The items below are explicitly **deferred** from Skill Craft v1. They are recorded here (per FR-041) so that future revisions know where the unfinished design surface lies and so that users of v1 do not write code that depends on undefined behavior in these areas.
 
 ### 10.1 Skill overloading
 
 **Status**: not in v1.
 
-Allowing multiple skills with the same name and different parameter signatures within a single class. Deferred because Axon's untyped, free-speech parameter model makes signature-based dispatch ambiguous without further design — there is no clean way for the LLM runtime to choose between `skill greet(name)` and `skill greet(name, title)` when the call site passes `greet(name: "Yair")` and either declared overload could plausibly accept the call.
+Allowing multiple skills with the same name and different parameter signatures within a single class. Deferred because Skill Craft's untyped, free-speech parameter model makes signature-based dispatch ambiguous without further design — there is no clean way for the LLM runtime to choose between `skill greet(name)` and `skill greet(name, title)` when the call site passes `greet(name: "Yair")` and either declared overload could plausibly accept the call.
 
 A future revision could introduce overloading by requiring that overloads differ in the number of *required* (non-defaulted) parameters, with the LLM dispatching by arity. This design has not been finalized.
 
@@ -2557,7 +2557,7 @@ Defaults that reference other fields, other classes' values, or skill calls. v1 
 
 **Status**: not in v1.
 
-`class Cache<T> { ... }` and the resulting type-parameter machinery. Out of scope for v1. The free-speech, untyped nature of Axon parameters means generics would have to be either purely documentary (the type parameter is just a name passed to the LLM) or backed by a real type system (which conflicts with FR-008).
+`class Cache<T> { ... }` and the resulting type-parameter machinery. Out of scope for v1. The free-speech, untyped nature of Skill Craft parameters means generics would have to be either purely documentary (the type parameter is just a name passed to the LLM) or backed by a real type system (which conflicts with FR-008).
 
 ### 10.5 A `uses` / `import` declaration
 
@@ -2569,7 +2569,7 @@ Composition is implicit and resolved project-wide (research R8, FR-010). A `uses
 
 **Status**: not in v1.
 
-Currently one `.axm` per project. A future version could allow multiple entry points selected by a CLI argument at compile time. The bundle format would need to extend `_manifest.axc` to enumerate the available entry points.
+Currently one `.skillcm` per project. A future version could allow multiple entry points selected by a CLI argument at compile time. The bundle format would need to extend `_manifest.scc` to enumerate the available entry points.
 
 ### 10.7 Runtime error taxonomy
 
@@ -2581,7 +2581,7 @@ v1 leaves runtime errors to be surfaced by the LLM in plain natural language (§
 
 **Status**: not in v1.
 
-There is no built-in library of classes (e.g., `FileExporter`, `EmailSender` are user-defined in the §9 examples, not language-provided). A future version may ship a small standard library covering common LLM agent tasks: file I/O, web fetch, email send, structured data extraction. The library's interface would need to be defined in Axon and shipped with every compiler distribution.
+There is no built-in library of classes (e.g., `FileExporter`, `EmailSender` are user-defined in the §9 examples, not language-provided). A future version may ship a small standard library covering common LLM agent tasks: file I/O, web fetch, email send, structured data extraction. The library's interface would need to be defined in Skill Craft and shipped with every compiler distribution.
 
 ### 10.9 Nested threading blocks
 

@@ -15,7 +15,7 @@
       "",
       "}"
     ],
-    "description": "Axon class declaration"
+    "description": "Skill Craft class declaration"
   },
   "Abstract Class": {
     "prefix": "aclass",
@@ -32,7 +32,7 @@
       "",
       "}"
     ],
-    "description": "Axon abstract class declaration"
+    "description": "Skill Craft abstract class declaration"
   },
   "Interface": {
     "prefix": "iface",
@@ -41,7 +41,7 @@
       "  @public skill ${2:required_skill}(${3:param})",
       "}"
     ],
-    "description": "Axon interface declaration"
+    "description": "Skill Craft interface declaration"
   },
   "Skill": {
     "prefix": "skill",
@@ -51,7 +51,7 @@
       "  - ${3:describe what this skill does}",
       "}"
     ],
-    "description": "Axon public skill"
+    "description": "Skill Craft public skill"
   },
   "Virtual Skill": {
     "prefix": "vskill",
@@ -61,7 +61,7 @@
       "  - ${3:default behavior — child may override}",
       "}"
     ],
-    "description": "Axon virtual skill (child may override)"
+    "description": "Skill Craft virtual skill (child may override)"
   },
   "Abstract Skill": {
     "prefix": "askill",
@@ -69,7 +69,7 @@
       "@public",
       "abstract skill ${1:skill_name}(${2:param})"
     ],
-    "description": "Axon abstract skill signature (no body)"
+    "description": "Skill Craft abstract skill signature (no body)"
   },
   "Parallel Block": {
     "prefix": "parallel",
@@ -79,7 +79,7 @@
       "  - call ${3:ClassB}.${4:skill_two}",
       "}"
     ],
-    "description": "Axon parallel concurrent block"
+    "description": "Skill Craft parallel concurrent block"
   },
   "Pipe per_item": {
     "prefix": "pipe-item",
@@ -89,7 +89,7 @@
       "  - call ${3:Consumer}.${4:consume}",
       "}"
     ],
-    "description": "Axon pipe — per_item strategy (stream items as produced)"
+    "description": "Skill Craft pipe — per_item strategy (stream items as produced)"
   },
   "Pipe on_complete": {
     "prefix": "pipe-batch",
@@ -99,7 +99,7 @@
       "  - call ${3:Consumer}.${4:consume}",
       "}"
     ],
-    "description": "Axon pipe — on_complete strategy (wait for full batch)"
+    "description": "Skill Craft pipe — on_complete strategy (wait for full batch)"
   },
   "Main Entry Point": {
     "prefix": "main",
@@ -109,6 +109,6 @@
       "  - call ${1:ClassName}.${2:skill_name}(${3:param: value})",
       "}"
     ],
-    "description": "Axon main entry point (use in .axm files)"
+    "description": "Skill Craft main entry point (use in .skillcm files)"
   }
 }

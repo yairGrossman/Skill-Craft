@@ -1,8 +1,8 @@
-# Axon
+# Skill Craft
 
-Axon is an object-oriented programming language for orchestrating AI agents (specifically Claude). Instead of writing prompts directly, you write structured classes and skills — and the Axon compiler turns them into a self-describing bundle that Claude reads and executes.
+Skill Craft is an object-oriented programming language for orchestrating AI agents (specifically Claude). Instead of writing prompts directly, you write structured classes and skills — and the Skill Craft compiler turns them into a self-describing bundle that Claude reads and executes.
 
-**Both the compiler and the runtime are Claude.** There is no classical code involved. The compiler is an Axon skill — a precise set of instructions that Claude follows to parse source files, validate structural rules, and emit the bundle.
+**Both the compiler and the runtime are Claude.** There is no classical code involved. The compiler is a Skill Craft skill — a precise set of instructions that Claude follows to parse source files, validate structural rules, and emit the bundle.
 
 **The idea in one sentence**: take all the discipline that makes software maintainable — encapsulation, inheritance, interfaces, visibility rules — and apply it to prompt engineering.
 
@@ -11,7 +11,7 @@ Axon is an object-oriented programming language for orchestrating AI agents (spe
 ## Table of Contents
 
 - [Installation](#installation)
-- [Why Axon Exists](#why-axon-exists)
+- [Why Skill Craft Exists](#why-Skill Craft-exists)
 - [Core Concepts](#core-concepts)
 - [A Quick Tour of the Syntax](#a-quick-tour-of-the-syntax)
 - [Example: Hello World](#example-hello-world)
@@ -27,32 +27,32 @@ Axon is an object-oriented programming language for orchestrating AI agents (spe
 
 ## Installation
 
-One command installs everything you need to develop in Axon:
-- the **axon-compile** skill for Claude Code
-- the **Axon VS Code extension** (syntax highlighting + snippets)
-- a ready-to-run **example project** in an `axon/` folder
+One command installs everything you need to develop in Skill Craft:
+- the **skillcraft-compile** skill for Claude Code
+- the **Skill Craft VS Code extension** (syntax highlighting + snippets)
+- a ready-to-run **example project** in an `Skill Craft/` folder
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/yairGrossman/Axon/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/yairGrossman/Skill Craft/main/install.ps1 | iex
 ```
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yairGrossman/Axon/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yairGrossman/Skill Craft/main/install.sh | bash
 ```
 
-Run from inside any project folder. After installation, open the `axon/` folder in Claude Code and run `/axon-compile` to compile the example.
+Run from inside any project folder. After installation, open the `Skill Craft/` folder in Claude Code and run `/skillcraft-compile` to compile the example.
 
 ---
 
-## Why Axon Exists
+## Why Skill Craft Exists
 
 When you build with LLMs today, prompts live in strings scattered across your code. They are hard to reuse, impossible to inherit, and easy to duplicate. There is no visibility system to prevent one agent from stepping on another's instructions.
 
-Axon treats prompts as first-class citizens of a type system:
+Skill Craft treats prompts as first-class citizens of a type system:
 
-| Traditional code | Axon |
+| Traditional code | Skill Craft |
 |---|---|
 | Methods on objects | **Skills** on classes |
 | Instance variables | **Fields** (class-scoped shared memory) |
@@ -71,7 +71,7 @@ The instructions inside skills are **free-speech natural language** — you writ
 
 A **class** is a static namespace of behavior. There are no instances and no constructors — a class is more like a named agent persona than a Java object.
 
-```axon
+```Skill Craft
 class Greeter {
   fields {
     @private last_greeting
@@ -99,7 +99,7 @@ Skills have three properties:
 
 **Fields** are class-scoped shared memory. All skills in a class share the same fields. They follow the same visibility rules as skills.
 
-```axon
+```Skill Craft
 fields {
   @private   api_key = "default"
   @protected report
@@ -121,11 +121,11 @@ The compiler enforces these rules at every call site. Violations are caught at c
 ## A Quick Tour of the Syntax
 
 ```
-.ax   →  class / abstract class / interface definition
-.axm  →  the optional entry point (at most one per project)
+.skillc   →  class / abstract class / interface definition
+.skillcm  →  the optional entry point (at most one per project)
 ```
 
-To compile a project, run `/axon-compile <source_directory>` in Claude Code. Claude parses your `.ax` and `.axm` files, validates all structural rules, and writes the compiled output directly into Claude Code's skills infrastructure:
+To compile a project, run `/skillcraft-compile <source_directory>` in Claude Code. Claude parses your `.skillc` and `.skillcm` files, validates all structural rules, and writes the compiled output directly into Claude Code's skills infrastructure:
 
 ```
 .claude/
@@ -135,7 +135,7 @@ To compile a project, run `/axon-compile <source_directory>` in Claude Code. Cla
 │   └── main/SKILL.md
 └── shared/
     ├── Greeter/fields.md
-    └── AxonProject.manifest.md
+    └── SkillCraftProject.manifest.md
 ```
 
 Each compiled skill becomes an invokable Claude Code command — `/greeter-greet`, `/greeter-recall`, `/main`, etc.
@@ -144,10 +144,10 @@ Each compiled skill becomes an invokable Claude Code command — `/greeter-greet
 
 ## Example: Hello World
 
-The smallest possible Axon program. One class, two skills, one entry point.
+The smallest possible Skill Craft program. One class, two skills, one entry point.
 
-**`greeter.ax`**
-```axon
+**`greeter.skillc`**
+```Skill Craft
 class Greeter {
 
   fields {
@@ -167,8 +167,8 @@ class Greeter {
 }
 ```
 
-**`main.axm`**
-```axon
+**`main.skillcm`**
+```Skill Craft
 @main
 skill main {
   - call Greeter.greet(name: "Yair")
@@ -176,23 +176,23 @@ skill main {
 }
 ```
 
-Run `/axon-compile` on this directory, then run `/main` in Claude Code. Claude will greet "Yair" and recall the greeting. No raw prompts. No copy-pasting. No duplication.
+Run `/skillcraft-compile` on this directory, then run `/main` in Claude Code. Claude will greet "Yair" and recall the greeting. No raw prompts. No copy-pasting. No duplication.
 
 ---
 
 ## Example: Inheritance and Interfaces
 
-This is where Axon starts to pay off. Suppose you want a reusable "research" workflow that different specializations (company research, academic research, etc.) can implement differently.
+This is where Skill Craft starts to pay off. Suppose you want a reusable "research" workflow that different specializations (company research, academic research, etc.) can implement differently.
 
-**`researchable.ax`** — an interface
-```axon
+**`researchable.skillc`** — an interface
+```Skill Craft
 interface Researchable {
   skill research(topic)
 }
 ```
 
-**`research.ax`** — an abstract base class
-```axon
+**`research.skillc`** — an abstract base class
+```Skill Craft
 abstract class Research {
 
   fields {
@@ -222,8 +222,8 @@ abstract class Research {
 }
 ```
 
-**`research_company.ax`** — a concrete implementation
-```axon
+**`research_company.skillc`** — a concrete implementation
+```Skill Craft
 class ResearchCompany extends Research implements Researchable {
 
   fields {
@@ -261,10 +261,10 @@ What happens here:
 
 ## Example: Multi-Agent Orchestration
 
-Axon's `parallel` and `pipe` blocks let you describe concurrent agent workflows without any framework code.
+Skill Craft's `parallel` and `pipe` blocks let you describe concurrent agent workflows without any framework code.
 
-**`main.axm`**
-```axon
+**`main.skillcm`**
+```Skill Craft
 @main
 skill main {
   - call ResearchCompany.research(topic: "Apple Inc")
@@ -289,9 +289,9 @@ skill main {
 
 ## How the Compiler Works
 
-The Axon compiler is not classical code — it is an Axon skill that Claude follows. When you invoke the compiler skill, Claude executes these steps:
+the Skill Craft compiler is not classical code — it is a Skill Craft skill that Claude follows. When you invoke the compiler skill, Claude executes these steps:
 
-1. **Discover sources** — read all `.ax` files and at most one `.axm` file from the source directory
+1. **Discover sources** — read all `.skillc` files and at most one `.skillcm` file from the source directory
 2. **Parse structure** — for each file, identify the class/abstract class/interface declaration, its fields, its skills with visibility and override mode, and its instruction bullets (treated as opaque text)
 3. **Resolve references** — build the class graph, walk inheritance chains, and for every `call` instruction verify that the referenced class and skill exist and are accessible
 4. **Validate rules** — enforce all structural rules: abstract skills implemented, interface contracts satisfied, visibility respected, sealed skills not overridden, no cyclical inheritance, no duplicate class names, at most one `@main`
@@ -312,8 +312,8 @@ Every error includes the source file, line and column, a human-readable message,
 | 6 | Unknown reference | Call to a class or skill that does not exist in the project |
 | 7 | Cyclical inheritance | `A extends B extends C extends A` |
 | 8 | Override mode mismatch | Overriding a skill that is neither `virtual` nor `abstract` |
-| 9 | Duplicate class name | Two `.ax` files both declare `class Greeter` |
-| 10 | Multiple `@main` skills | More than one `.axm` file, or two `@main` in one file |
+| 9 | Duplicate class name | Two `.skillc` files both declare `class Greeter` |
+| 10 | Multiple `@main` skills | More than one `.skillcm` file, or two `@main` in one file |
 
 ---
 
@@ -325,10 +325,10 @@ The compiled output lives directly inside Claude Code's skills infrastructure an
 .claude/
 ├── skills/
 │   ├── classname-skillname/SKILL.md   ← one folder per @public / @protected skill
-│   └── main/SKILL.md                  ← present only when an .axm entry point was provided
+│   └── main/SKILL.md                  ← present only when an .skillcm entry point was provided
 └── shared/
     ├── ClassName/fields.md            ← one file per class that declares fields
-    └── AxonProject.manifest.md        ← class graph, inheritance, interfaces, entry point
+    └── SkillCraftProject.manifest.md        ← class graph, inheritance, interfaces, entry point
 ```
 
 **Naming convention**: `ClassName.skill_name` is lowercased and hyphenated — `Greeter.greet` → `greeter-greet`, `ResearchCompany.write_report` → `researchcompany-writereport`.
@@ -337,13 +337,13 @@ Each `SKILL.md` contains a metadata block (class, visibility, override mode, par
 
 Each compiled skill is immediately invokable in Claude Code as a slash command: `/greeter-greet`, `/researchcompany-research`, `/main`, etc.
 
-**Incremental compilation**: the compiler fingerprints every emitted file. Re-running `/axon-compile` only rewrites files whose source changed and reports a `created / updated / unchanged / deleted` summary.
+**Incremental compilation**: the compiler fingerprints every emitted file. Re-running `/skillcraft-compile` only rewrites files whose source changed and reports a `created / updated / unchanged / deleted` summary.
 
 ---
 
 ## How Claude Executes a Bundle
 
-1. **Load the manifest** — `.claude/shared/AxonProject.manifest.md` gives Claude the complete picture: every class, its parent, its interfaces, its skill list, and the entry point.
+1. **Load the manifest** — `.claude/shared/SkillCraftProject.manifest.md` gives Claude the complete picture: every class, its parent, its interfaces, its skill list, and the entry point.
 2. **Find the entry point** — if `.claude/skills/main/SKILL.md` exists, begin there. Otherwise the bundle is a library and Claude awaits a call.
 3. **Execute skills** — for each skill call, Claude reads the corresponding `SKILL.md` in `.claude/skills/`, loads the referenced fields from `.claude/shared/`, and follows the natural-language instructions.
 4. **Resolve `this.*` and `base.*`** — using the inheritance chain recorded in the manifest.
@@ -358,14 +358,14 @@ Claude is both the compiler and the runtime. The division of labor is intentiona
 ## Project Structure
 
 ```
-docs/axon/
-    ├── spec.md                        ← canonical Axon language specification
+docs/skillcraft/
+    ├── spec.md                        ← canonical Skill Craft language specification
     └── examples/
         ├── small/                     ← Greeter hello-world
         ├── medium/                    ← Research + ResearchCompany + interface
         └── complex/                   ← multi-agent orchestration with threading
 
-specs/001-axon-language/               ← specification authoring artifacts
+specs/001-skillcraft-language/               ← specification authoring artifacts
     ├── spec.md                        ← feature requirements
     ├── plan.md                        ← implementation plan
     ├── research.md                    ← notational decisions
@@ -377,17 +377,17 @@ specs/001-axon-language/               ← specification authoring artifacts
         └── error-catalog.md          ← all 10 compiler errors with examples
 
 .claude/
-    ├── skills/axon-compile/SKILL.md   ← the Axon compiler skill
-    └── shared/AxonProject.manifest.md ← written by the compiler after first run
+    ├── skills/skillcraft-compile/SKILL.md   ← the Skill Craft compiler skill
+    └── shared/SkillCraftProject.manifest.md ← written by the compiler after first run
 ```
 
-The canonical language specification lives at [docs/axon/spec.md](docs/axon/spec.md). It is the contract a future compiler implementation is built from — precise enough that two independent engineers should produce byte-equivalent bundles for the same input.
+The canonical language specification lives at [docs/skillcraft/spec.md](docs/skillcraft/spec.md). It is the contract a future compiler implementation is built from — precise enough that two independent engineers should produce byte-equivalent bundles for the same input.
 
 ---
 
 ## Roadmap
 
-The current deliverable is the **language specification** and the **Axon compiler skill** — a Claude skill that reads Axon source files and emits a compiled bundle. Because the compiler is Claude itself, there is no separate implementation project needed.
+The current deliverable is the **language specification** and the **Skill Craft compiler skill** — a Claude skill that reads Skill Craft source files and emits a compiled bundle. Because the compiler is Claude itself, there is no separate implementation project needed.
 
 Deferred to a future version:
 

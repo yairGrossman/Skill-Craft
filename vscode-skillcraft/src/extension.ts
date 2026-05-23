@@ -30,12 +30,12 @@ interface ClassDef {
 
 // ── Workspace model ───────────────────────────────────────────────────────────
 
-class AxonWorkspaceModel {
+class SkillCraftWorkspaceModel {
     private defs: Map<string, ClassDef> = new Map();
 
     async refresh(): Promise<void> {
         this.defs.clear();
-        const files = await vscode.workspace.findFiles('**/*.ax', '**/node_modules/**');
+        const files = await vscode.workspace.findFiles('**/*.skillc', '**/node_modules/**');
         for (const file of files) {
             try {
                 const doc = await vscode.workspace.openTextDocument(file);
@@ -178,7 +178,7 @@ const HOVER_DOCS: Record<string, string> = {
     '@public':      'Accessible from **any** class or file in the project.',
     '@protected':   'Accessible from this class and its **descendants** only.',
     '@private':     'Accessible from **this class only**.',
-    '@main':        'Entry-point decorator. Only valid in `.axm` files — at most one per project.',
+    '@main':        'Entry-point decorator. Only valid in `.skillcm` files — at most one per project.',
     'skill':        'A named unit of LLM instruction. Its body is a list of `- bullet` instructions.',
     'fields':       'Class-scoped shared memory block. Every skill in the class reads and writes the same fields.',
     'abstract':     '**Override mode**: no body — concrete subclasses **must** implement this skill.',
@@ -199,7 +199,7 @@ const HOVER_DOCS: Record<string, string> = {
 
 // ── Hover provider ────────────────────────────────────────────────────────────
 
-class AxonHoverProvider implements vscode.HoverProvider {
+class SkillCraftHoverProvider implements vscode.HoverProvider {
     provideHover(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -210,7 +210,7 @@ class AxonHoverProvider implements vscode.HoverProvider {
         const doc = HOVER_DOCS[word];
         if (!doc) return undefined;
         return new vscode.Hover(
-            new vscode.MarkdownString(`**Axon** \`${word}\`\n\n${doc}`),
+            new vscode.MarkdownString(`**Skill Craft** \`${word}\`\n\n${doc}`),
             wordRange,
         );
     }
@@ -218,8 +218,8 @@ class AxonHoverProvider implements vscode.HoverProvider {
 
 // ── Completion provider ───────────────────────────────────────────────────────
 
-class AxonCompletionProvider implements vscode.CompletionItemProvider {
-    constructor(private model: AxonWorkspaceModel) {}
+class SkillCraftCompletionProvider implements vscode.CompletionItemProvider {
+    constructor(private model: SkillCraftWorkspaceModel) {}
 
     provideCompletionItems(
         document: vscode.TextDocument,
@@ -275,8 +275,8 @@ class AxonCompletionProvider implements vscode.CompletionItemProvider {
     // ── helpers ──────────────────────────────────────────────────────────────
 
     /** Parse the current document text into a temporary model (always fresh). */
-    private liveModel(document: vscode.TextDocument): AxonWorkspaceModel {
-        const m = new AxonWorkspaceModel();
+    private liveModel(document: vscode.TextDocument): SkillCraftWorkspaceModel {
+        const m = new SkillCraftWorkspaceModel();
         m.parseContent(document.getText());
         return m;
     }
@@ -356,7 +356,7 @@ class AxonCompletionProvider implements vscode.CompletionItemProvider {
     private classNameItems(document: vscode.TextDocument): vscode.CompletionItem[] {
         return this.mergedClassNames(document).map(name => {
             const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Class);
-            item.detail = 'Axon class';
+            item.detail = 'Skill Craft class';
             return item;
         });
     }
@@ -364,7 +364,7 @@ class AxonCompletionProvider implements vscode.CompletionItemProvider {
     private interfaceNameItems(document: vscode.TextDocument): vscode.CompletionItem[] {
         return this.mergedInterfaceNames(document).map(name => {
             const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Interface);
-            item.detail = 'Axon interface';
+            item.detail = 'Skill Craft interface';
             return item;
         });
     }
@@ -418,26 +418,26 @@ class AxonCompletionProvider implements vscode.CompletionItemProvider {
 // ── Activation ────────────────────────────────────────────────────────────────
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    const model = new AxonWorkspaceModel();
+    const model = new SkillCraftWorkspaceModel();
     await model.refresh();
 
     context.subscriptions.push(
         vscode.workspace.onDidSaveTextDocument(doc => {
-            if (doc.fileName.endsWith('.ax')) {
+            if (doc.fileName.endsWith('.skillc')) {
                 model.refresh();
             }
         }),
     );
 
-    const selector: vscode.DocumentSelector = { scheme: 'file', language: 'axon' };
+    const selector: vscode.DocumentSelector = { scheme: 'file', language: 'skillcraft' };
 
     context.subscriptions.push(
         vscode.languages.registerCompletionItemProvider(
             selector,
-            new AxonCompletionProvider(model),
+            new SkillCraftCompletionProvider(model),
             '.', ':',
         ),
-        vscode.languages.registerHoverProvider(selector, new AxonHoverProvider()),
+        vscode.languages.registerHoverProvider(selector, new SkillCraftHoverProvider()),
     );
 }
 

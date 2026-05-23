@@ -1,12 +1,12 @@
-# Axon Language — VS Code Extension
+# Skill Craft language — VS Code Extension
 
-Syntax highlighting, snippets, and language support for the **Axon** programming language (`.ax`, `.axm`).
+Syntax highlighting, snippets, and language support for the **Skill Craft** programming language (`.skillc`, `.skillcm`).
 
 ---
 
-## What is Axon?
+## What is Skill Craft?
 
-Axon is a high-level, intent-driven language where you describe *what* to do using natural language instructions inside structured **skills**. It compiles to executable Claude Code skills.
+Skill Craft is a high-level, intent-driven language where you describe *what* to do using natural language instructions inside structured **skills**. It compiles to executable Claude Code skills.
 
 ---
 
@@ -14,8 +14,8 @@ Axon is a high-level, intent-driven language where you describe *what* to do usi
 
 | Extension | Purpose |
 |-----------|---------|
-| `.ax`  | Class and skill definitions |
-| `.axm` | Main entry point (orchestrates calls) |
+| `.skillc`  | Class and skill definitions |
+| `.skillcm` | Main entry point (orchestrates calls) |
 
 ---
 
@@ -23,7 +23,7 @@ Axon is a high-level, intent-driven language where you describe *what* to do usi
 
 ### Classes and Fields
 
-```axon
+```Skill Craft
 class Greeter {
 
   fields {
@@ -45,7 +45,7 @@ class Greeter {
 
 ### Abstract Classes and Inheritance
 
-```axon
+```Skill Craft
 abstract class Research {
 
   fields {
@@ -77,7 +77,7 @@ abstract class Research {
 
 ### Implementing and Extending
 
-```axon
+```Skill Craft
 class ResearchCompany extends Research implements Researchable {
 
   fields {
@@ -104,9 +104,9 @@ class ResearchCompany extends Research implements Researchable {
 }
 ```
 
-### Main Entry Point (`.axm`)
+### Main Entry Point (`.skillcm`)
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call Greeter.greet(name: Yair)
@@ -118,7 +118,7 @@ skill main {
 
 Run multiple skills concurrently with `parallel {}`:
 
-```axon
+```Skill Craft
 @main
 skill main {
   - call ResearchCompany.research(topic: "Apple Inc")
@@ -134,7 +134,7 @@ skill main {
 
 Process items as they are produced (`per_item`) or after all are ready (`on_complete`):
 
-```axon
+```Skill Craft
 pipe(strategy: per_item) {
   - call QuestionGenerator.generate_questions(topic: "Apple Inc", amount: 5)
   - call EmailSender.send(recipient: "team@co.com", subject: "Follow-up question", body: ResearchCompany.report)
@@ -176,4 +176,4 @@ pipe(strategy: per_item) {
 |----------|---------|
 | `abstract` | No body — subclass must implement |
 | `virtual` | Has a default body — subclass may override |
-| `@main` | Entry point skill (used in `.axm` files) |
+| `@main` | Entry point skill (used in `.skillcm` files) |

@@ -1,49 +1,49 @@
-# Axon installer for Windows (PowerShell)
+# Skill Craft installer for Windows (PowerShell)
 # Run from inside your project folder:
-#   irm https://raw.githubusercontent.com/yairGrossman/Axon/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/yairGrossman/Skill Craft/main/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
-$RAW  = "https://raw.githubusercontent.com/yairGrossman/Axon/main"
+$RAW  = "https://raw.githubusercontent.com/yairGrossman/Skill Craft/main"
 
 $projectDir = (Get-Location).Path
 
-Write-Host "==> Installing Axon developer tools" -ForegroundColor Cyan
+Write-Host "==> Installing Skill Craft developer tools" -ForegroundColor Cyan
 
-# ── 1. axon-compile skill ────────────────────────────────────────────────────
-$skillDir = Join-Path $projectDir ".claude\skills\axon-compile"
+# ── 1. skillcraft-compile skill ────────────────────────────────────────────────────
+$skillDir = Join-Path $projectDir ".claude\skills\skillcraft-compile"
 New-Item -ItemType Directory -Force -Path $skillDir | Out-Null
-Write-Host "    Fetching axon-compile skill..."
-Invoke-WebRequest "$RAW/.claude/skills/axon-compile/SKILL.md" `
+Write-Host "    Fetching skillcraft-compile skill..."
+Invoke-WebRequest "$RAW/.claude/skills/skillcraft-compile/SKILL.md" `
     -OutFile "$skillDir\SKILL.md" -UseBasicParsing
 Write-Host "    Skill -> $skillDir" -ForegroundColor Green
 
 # ── 2. VS Code extension ─────────────────────────────────────────────────────
 if (Get-Command code -ErrorAction SilentlyContinue) {
-    $vsixTemp = Join-Path $env:TEMP "vscode-axon.vsix"
+    $vsixTemp = Join-Path $env:TEMP "vscode-skillcraft.vsix"
     Write-Host "    Fetching VS Code extension..."
-    Invoke-WebRequest "$RAW/vscode-axon/vscode-axon-0.2.0.vsix" `
+    Invoke-WebRequest "$RAW/vscode-skillcraft/vscode-skillcraft-0.2.0.vsix" `
         -OutFile $vsixTemp -UseBasicParsing
     code --install-extension $vsixTemp | Out-Null
     Remove-Item $vsixTemp -Force
     Write-Host "    VS Code extension installed" -ForegroundColor Green
 } else {
     Write-Warning "    'code' not in PATH. Install VS Code shell command, then run:"
-    Write-Warning "    code --install-extension $RAW/vscode-axon/vscode-axon-0.2.0.vsix"
+    Write-Warning "    code --install-extension $RAW/vscode-skillcraft/vscode-skillcraft-0.2.0.vsix"
 }
 
-# ── 3. Example project in ./axon/ ────────────────────────────────────────────
-$axonDir = Join-Path $projectDir "axon\examples"
-New-Item -ItemType Directory -Force -Path $axonDir | Out-Null
-Write-Host "    Writing example project -> $axonDir"
+# ── 3. Example project in ./Skill Craft/ ────────────────────────────────────────────
+$skillcraftDir = Join-Path $projectDir "skillcraft\examples"
+New-Item -ItemType Directory -Force -Path $skillcraftDir | Out-Null
+Write-Host "    Writing example project -> $skillcraftDir"
 
-Set-Content "$axonDir\reportable.ax" @'
+Set-Content "$skillcraftDir\reportable.skillc" @'
 interface Reportable {
   skill generate(topic)
 }
 '@
 
-Set-Content "$axonDir\reporter.ax" @'
+Set-Content "$skillcraftDir\reporter.skillc" @'
 abstract class Reporter implements Reportable {
 
   fields {
@@ -73,7 +73,7 @@ abstract class Reporter implements Reportable {
 }
 '@
 
-Set-Content "$axonDir\news_reporter.ax" @'
+Set-Content "$skillcraftDir\news_reporter.skillc" @'
 class NewsReporter extends Reporter {
 
   fields {
@@ -94,7 +94,7 @@ class NewsReporter extends Reporter {
 }
 '@
 
-Set-Content "$axonDir\main.axm" @'
+Set-Content "$skillcraftDir\main.skillcm" @'
 @main
 skill main {
   - call NewsReporter.generate(topic: "AI trends")
@@ -113,4 +113,4 @@ skill main {
 
 Write-Host "    Example project written (4 files)" -ForegroundColor Green
 Write-Host ""
-Write-Host "Done. Open axon/examples/ in Claude Code and run /axon-compile to compile." -ForegroundColor Cyan
+Write-Host "Done. Open skillcraft/examples/ in Claude Code and run /skillcraft-compile to compile." -ForegroundColor Cyan

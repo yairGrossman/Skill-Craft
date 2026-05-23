@@ -24,5 +24,5 @@ desktop.ini
 specs/
 
 # VS Code extension build artifacts
-vscode-axon/node_modules/
-vscode-axon/out/
+vscode-skillcraft/node_modules/
+vscode-skillcraft/out/

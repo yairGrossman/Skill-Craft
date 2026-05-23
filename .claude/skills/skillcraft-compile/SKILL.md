@@ -1,12 +1,12 @@
 ---
-name: axon-compile
-description: Compiles an Axon project from .ax and .axm source files into Claude Code skills under .claude/skills/. Fully self-contained — no external spec file required.
-argument-hint: "source_directory (path to the folder containing your .ax and .axm files)"
+name: skillcraft-compile
+description: Compiles a Skill Craft project from .skillc and .skillcm source files into Claude Code skills under .claude/skills/. Fully self-contained — no external spec file required.
+argument-hint: "source_directory (path to the folder containing your .skillc and .skillcm files)"
 user-invocable: true
 disable-model-invocation: false
 metadata:
-  author: Axon
-  source: .claude/skills/axon-compile/SKILL.md
+  author: Skill Craft
+  source: .claude/skills/skillcraft-compile/SKILL.md
 ---
 
 ## User Input
@@ -16,16 +16,16 @@ $ARGUMENTS
 ```
 
 The value of `$ARGUMENTS` is the `source_directory` — the path to the folder containing
-the `.ax` and `.axm` source files to compile.
+the `.skillc` and `.skillcm` source files to compile.
 
 ---
 
 ## Class Context
 
-**Class:** AxonCompiler
+**Class:** SkillCraftCompiler
 **Visibility:** @public
 **Parameters:** source_directory
-**Own fields:** see ../../shared/AxonCompiler/fields.md
+**Own fields:** see ../../shared/SkillCraftCompiler/fields.md
 **Inherited fields:** none
 **Depends on:** none
 
@@ -40,7 +40,7 @@ the `.ax` and `.axm` source files to compile.
 - NEVER write a skill file for skills a child inherits unchanged from its parent
 - NEVER invent field defaults — if a field has no default in source, write `none`
 - ALWAYS collect ALL errors before reporting — never stop at the first one
-- ALWAYS write `AxonProject.manifest.md` last
+- ALWAYS write `SkillCraftProject.manifest.md` last
 - ALWAYS replace `call ClassName.skill_name(...)` with `/classname-skillname` in emitted SKILL.md files
 - ENRICH each non-call instruction bullet with 1–4 specific sub-bullets (see Step 7a) — enrichment is distinct from validation; SR-3 applies only to validation
 - ALWAYS wrap the `source-hash` frontmatter value in double quotes — the value contains colons and pipes that YAML would otherwise misparse
@@ -48,13 +48,13 @@ the `.ax` and `.axm` source files to compile.
 
 ---
 
-## Axon Language Reference
+## Skill Craft language Reference
 
-This section embeds everything you need to know about the Axon language. Do not consult any external files.
+This section embeds everything you need to know about the Skill Craft language. Do not consult any external files.
 
 ### Core philosophy
 
-- Axon is a static, object-oriented language for orchestrating LLM agents
+- Skill Craft is a static, object-oriented language for orchestrating LLM agents
 - No instances exist — classes are namespaces of behavior
 - No explicit types — the LLM infers types from context
 - No `if`, `for`, `while` keywords — natural language inside instruction bullets handles all logic
@@ -63,12 +63,12 @@ This section embeds everything you need to know about the Axon language. Do not 
 
 ### File extensions
 
-- `.ax` files contain class, abstract class, or interface declarations (exactly one per file)
-- `.axm` files contain the `@main skill main { }` declaration (at most one per project)
+- `.skillc` files contain class, abstract class, or interface declarations (exactly one per file)
+- `.skillcm` files contain the `@main skill main { }` declaration (at most one per project)
 
 ### Top-level declarations
 
-A `.ax` file MUST declare exactly one of:
+A `.skillc` file MUST declare exactly one of:
 
 **Class:**
 ```
@@ -204,7 +204,7 @@ pipe(strategy: on_complete) {
 }
 ```
 
-### Main file (`.axm`)
+### Main file (`.skillcm`)
 
 ```
 @main
@@ -216,7 +216,7 @@ skill main {
 ```
 
 Rules:
-- Exactly one `.axm` file per project (zero is also valid — library mode)
+- Exactly one `.skillcm` file per project (zero is also valid — library mode)
 - The `@main` skill takes no parameters
 - The body is a sequence of calls and threading blocks — never inline content from other classes
 
@@ -353,13 +353,13 @@ Suggested fix: remove the modifier from the override.
 
 ### E9 — Duplicate class name
 
-Two `.ax` files declare a class or interface with the same name.
+Two `.skillc` files declare a class or interface with the same name.
 
 Suggested fix: rename one, or merge them if they were meant to be the same declaration.
 
 ### E10 — Multiple `@main` skills
 
-The project contains more than one `.axm` file, or a single `.axm` contains more than one `@main` skill.
+The project contains more than one `.skillcm` file, or a single `.skillcm` contains more than one `@main` skill.
 
 Suggested fix: merge the main files into one, or delete the unintended one.
 
@@ -369,15 +369,15 @@ Suggested fix: merge the main files into one, or delete the unintended one.
 
 ### 1. Discover sources
 
-- Scan `source_directory` recursively for all `.ax` files
-- Scan for all `.axm` files
-- If more than one `.axm` file exists, record an E10 error
+- Scan `source_directory` recursively for all `.skillc` files
+- Scan for all `.skillcm` files
+- If more than one `.skillcm` file exists, record an E10 error
 - If no source files exist at all, report "empty project" and stop
 
 ### 2. Parse sources
 
-- For each `.ax` file, parse exactly one top-level declaration following the Language Reference above
-- For each `.axm` file, parse exactly one `@main skill main { ... }` block
+- For each `.skillc` file, parse exactly one top-level declaration following the Language Reference above
+- For each `.skillcm` file, parse exactly one `@main skill main { ... }` block
 - Identify all skill bodies — within each body, treat non-call bullets as opaque text
 - For each call instruction (`- call ...`), parse the target and arguments
 - If a file violates the grammar, record a parse error with file name, line, and column
@@ -407,7 +407,7 @@ If any errors exist, emit them all using the format above, state that no files w
 
 ### 5. Load previous compilation state
 
-- Check if `.claude/shared/AxonProject.manifest.md` exists
+- Check if `.claude/shared/SkillCraftProject.manifest.md` exists
 - If absent: fresh compilation — set `previous_skill_folders` = empty set, `previous_class_folders` = empty set
 - If present: read it, extract the **Skill folders** list → `previous_skill_folders`, extract the **Class folders in shared** list → `previous_class_folders`
 - Do NOT delete anything yet — deletion happens in Step 8.5 after the new manifest is fully known
@@ -557,7 +557,7 @@ Bind $ARGUMENTS to parameters in declaration order, or by name if named form is 
 - `abstract` skills (no body — not invokable; record them in the manifest only as contract requirements)
 - Skills a child inherits unchanged from its parent (the parent's file remains canonical)
 
-**If a `.axm` file is present:**
+**If a `.skillcm` file is present:**
 
 - Create folder `.claude/skills/main/`
 - Apply the fingerprint check from Step 5a before writing — skip if fingerprint matches
@@ -596,10 +596,10 @@ source-hash: "instruction bullet one|instruction bullet two"
 
 ### 8. Emit project manifest
 
-Write `.claude/shared/AxonProject.manifest.md` with this exact structure:
+Write `.claude/shared/SkillCraftProject.manifest.md` with this exact structure:
 
 ```markdown
-# AxonProject manifest
+# SkillCraftProject manifest
 
 ## Classes
 - ClassName [concrete|abstract]
