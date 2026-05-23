@@ -1,10 +1,10 @@
 # Skill Craft installer for Windows (PowerShell)
 # Run from inside your project folder:
-#   irm https://raw.githubusercontent.com/yairGrossman/Skill Craft/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/yairGrossman/Skill-Craft/main/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
-$RAW  = "https://raw.githubusercontent.com/yairGrossman/Skill Craft/main"
+$RAW  = "https://raw.githubusercontent.com/yairGrossman/Skill-Craft/main"
 
 $projectDir = (Get-Location).Path
 
@@ -32,7 +32,7 @@ if (Get-Command code -ErrorAction SilentlyContinue) {
     Write-Warning "    code --install-extension $RAW/vscode-skillcraft/vscode-skillcraft-0.2.0.vsix"
 }
 
-# ── 3. Example project in ./Skill Craft/ ────────────────────────────────────────────
+# ── 3. Example project in ./skillcraft/examples/ ────────────────────────────────────
 $skillcraftDir = Join-Path $projectDir "skillcraft\examples"
 New-Item -ItemType Directory -Force -Path $skillcraftDir | Out-Null
 Write-Host "    Writing example project -> $skillcraftDir"

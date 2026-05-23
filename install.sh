@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Skill Craft installer for macOS / Linux
 # Run from inside your project folder:
-#   curl -fsSL https://raw.githubusercontent.com/yairGrossman/Skill Craft/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/yairGrossman/Skill-Craft/main/install.sh | bash
 
 set -e
 
-RAW="https://raw.githubusercontent.com/yairGrossman/Skill Craft/main"
+RAW="https://raw.githubusercontent.com/yairGrossman/Skill-Craft/main"
 
 PROJECT_DIR="$(pwd)"
 
@@ -31,7 +31,7 @@ else
     echo "    code --install-extension $RAW/vscode-skillcraft/vscode-skillcraft-0.2.0.vsix"
 fi
 
-# ── 3. Example project in ./Skill Craft/ ────────────────────────────────────────────
+# ── 3. Example project in ./skillcraft/examples/ ────────────────────────────────────
 SKILLCRAFT_DIR="$(pwd)/skillcraft/examples"
 mkdir -p "$SKILLCRAFT_DIR"
 echo "    Writing example project -> $SKILLCRAFT_DIR"
