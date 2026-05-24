@@ -206,9 +206,17 @@ pipe(strategy: on_complete) {
 
 ### Main file (`.skillcm`)
 
+A `.skillcm` file may contain zero or more **local skills** plus exactly one `@main` skill. Local skills may appear before or after `@main`.
+
 ```
+skill local_skill_name(param1, param2 = default) {
+  - free speech instruction
+  - call ClassName.skill_name(args)
+}
+
 @main
 skill main {
+  - call local_skill_name(param1: value)
   - call ClassName.skill_name(args)
   parallel { ... }
   pipe(strategy: per_item) { ... }
@@ -218,7 +226,11 @@ skill main {
 Rules:
 - Exactly one `.skillcm` file per project (zero is also valid — library mode)
 - The `@main` skill takes no parameters
-- The body is a sequence of calls and threading blocks — never inline content from other classes
+- Local skills have NO visibility modifier — they are implicitly private to the `.skillcm` file
+- Local skills accept zero or more parameters (same syntax as class skills)
+- Local skills are called from `@main` using `call local_skill_name(...)` — no class prefix
+- Local skills CANNOT be called from `.skillc` class files — this is an E4 error
+- Local skills ARE enriched (Step 7a) the same way class skills are
 
 ### Free-speech logic inside bullets
 
@@ -283,6 +295,9 @@ A pipe may have more than two stages. The strategy applies pairwise between cons
 
 ### SR-13 — Main body restriction
 The body of `@main` MAY contain only call instructions and threading blocks. It MUST NOT contain inlined skill content.
+
+### SR-14 — Local skill scope
+Skills declared in a `.skillcm` file without a visibility modifier are implicitly `@private` to that file. They may be called by `@main` or by other local skills in the same `.skillcm` file. A `.skillc` skill attempting to call a local `.skillcm` skill is an E4 visibility violation. Local skill names MUST NOT collide with each other — a duplicate local skill name is an E9 variant.
 
 ---
 
@@ -377,7 +392,7 @@ Suggested fix: merge the main files into one, or delete the unintended one.
 ### 2. Parse sources
 
 - For each `.skillc` file, parse exactly one top-level declaration following the Language Reference above
-- For each `.skillcm` file, parse exactly one `@main skill main { ... }` block
+- For each `.skillcm` file, parse zero or more local skill declarations (`skill name(...) { ... }` with no `@` modifier) and exactly one `@main skill main { ... }` block, in any order; local skills: record name, parameters, and body bullets (same parsing as class skills); if two local skills share the same name, record an E9 error
 - Identify all skill bodies — within each body, treat non-call bullets as opaque text
 - For each call instruction (`- call ...`), parse the target and arguments
 - If a file violates the grammar, record a parse error with file name, line, and column
@@ -392,7 +407,7 @@ Suggested fix: merge the main files into one, or delete the unintended one.
 
 ### 4. Validate
 
-Apply every semantic rule (SR-1 through SR-13). Detect every error condition (E1 through E10):
+Apply every semantic rule (SR-1 through SR-14). Detect every error condition (E1 through E10):
 
 - For each concrete class, walk the ancestor chain — for each `abstract` skill, verify the concrete descendant implements it (else E1)
 - For each `implements`, verify every required `@public` signature is provided with matching visibility (else E2)
@@ -401,6 +416,8 @@ Apply every semantic rule (SR-1 through SR-13). Detect every error condition (E1
 - For every override of a `sealed` skill, record E5
 - For every reference to a non-existent class/skill/field, record E6 with a "did you mean" suggestion
 - For every override that re-marks with `abstract` or `virtual`, record E8
+- For each call in a `.skillc` skill body that references a local `.skillcm` skill name, record an E4 error (local skills are private to `.skillcm`)
+- For each call in `@main` or a local skill of the form `call name(...)` (no `ClassName.` prefix, not `this.*` or `base.*`), verify `name` exists as a local skill in the same `.skillcm` — if not, record an E6 unknown reference error
 - Collect ALL errors found
 
 If any errors exist, emit them all using the format above, state that no files were written, and stop.
@@ -434,7 +451,7 @@ visibility:@public|mode:virtual|params:name,lang=en|greet name warmly|store in l
 ```
 Example: `api_key:@private:default|report:@protected:none`
 
-**Main fingerprint** — concatenate all instruction bullets verbatim, joined by `|`.
+**Main fingerprint** — concatenate, joined by `|`: for each local skill in declaration order: `local:<name>|params:<...>|<bullet1>|<bullet2>|...`, then all `@main` instruction bullets verbatim.
 
 **How to use during emit (Steps 6 and 7):**
 1. Compute the fingerprint from parsed source
@@ -569,7 +586,7 @@ name: main
 description: entry point — orchestrates the full project workflow
 user-invocable: true
 disable-model-invocation: false
-source-hash: "instruction bullet one|instruction bullet two"
+source-hash: "local:skill_name|params:...|bullet|...|main bullet one|main bullet two"
 ---
 
 ## Operating Constraints
@@ -581,10 +598,25 @@ source-hash: "instruction bullet one|instruction bullet two"
   as it is emitted; consumer runs once per item
 - For pipe(strategy: on_complete): run producer to full completion then
   pass all output to consumer; consumer runs once
+- When an instruction says `call local_skill_name(...)`, execute the matching
+  local skill defined in the ## Local Skills section of this file
+
+## Local Skills
+
+(present only if the `.skillcm` declares at least one local skill; omit this entire section otherwise)
+
+### local_skill_name
+**Parameters:** param1, param2 = default (or "none")
+**Calls:** /classname-skillname (or "none")
+
+- instruction bullet exactly as written in source
+  - [enrichment sub-bullets — same rules as Step 7a]
+- /classname-skillname (arguments)
 
 ## Instructions
 
-- call instructions written as /classname-skillname with their arguments
+- call local_skill_name(param: value)
+- /classname-skillname (arguments)
 - parallel blocks preserved with their structure and indentation
 - pipe blocks preserved with their strategy
 - all other instructions preserved verbatim
@@ -593,6 +625,13 @@ source-hash: "instruction bullet one|instruction bullet two"
 - /classname-skillname
 - /classname-otherskill
 ```
+
+**Local skill emit rules:**
+- Local skills do NOT get their own SKILL.md folder — they are inlined into `main/SKILL.md` under `## Local Skills`
+- Each local skill becomes a `### skill_name` subsection with its parameters, calls, and enriched body
+- Class skill calls inside local skill bodies ARE converted to `/classname-skillname`
+- Calls to local skills in `@main` body are preserved as `call skill_name(...)` — not converted
+- If no local skills exist, omit the `## Local Skills` section entirely
 
 ### 8. Emit project manifest
 
